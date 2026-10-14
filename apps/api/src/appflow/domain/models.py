@@ -109,6 +109,15 @@ class TopologyGraph(BaseModel):
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
+class SnapshotResponse(BaseModel):
+    """Timestamped sequence snapshot of the filtered or full topology graph."""
+
+    model_config = FROZEN_MODEL_CONFIG
+
+    seq: Annotated[int, Field(ge=0, description="Monotonic sequence number")]
+    graph: Annotated[TopologyGraph, Field(description="Topology graph snapshot")]
+
+
 class TopologySummary(BaseModel):
     """Compact SSR payload for instant LCP paint (Master Plan §4.3)."""
 
