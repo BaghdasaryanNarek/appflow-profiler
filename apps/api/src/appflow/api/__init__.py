@@ -3,6 +3,7 @@
 from appflow.api import (
     deps,
     routes_health,
+    routes_insights,
     routes_meta,
     routes_simulation,
     routes_topology,
@@ -12,6 +13,7 @@ from appflow.api import (
 __all__ = [
     "deps",
     "routes_health",
+    "routes_insights",
     "routes_meta",
     "routes_simulation",
     "routes_topology",

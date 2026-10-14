@@ -12,6 +12,7 @@ from appflow.config import Settings
 from appflow.config import get_settings as _config_get_settings
 
 if TYPE_CHECKING:
+    from appflow.advisor.service import AdvisorService
     from appflow.sources.base import TopologySource
     from appflow.streaming.aggregator import TopologyAggregator
     from appflow.streaming.hub import StreamHub
@@ -141,8 +142,59 @@ async def check_scenario_rate_limit(
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=(
-                f"Rate limit exceeded: scenario activations are restricted to 1 per 10 seconds. "
+                "Rate limit exceeded: scenario activations are restricted to 1 per 10 seconds. "
                 f"Please retry after {retry_seconds}s."
             ),
             headers={"Retry-After": str(retry_seconds)},
         )
+
+
+def get_insights_limiter(request: Request) -> TokenBucketLimiter:
+    """Retrieve or lazily initialize the per-app insights rate limiter on app.state."""
+    limiter = getattr(request.app.state, "insights_limiter", None)
+    if not isinstance(limiter, TokenBucketLimiter):
+        # 5 requests per minute (5/60 tokens/sec, capacity 5.0)
+        limiter = TokenBucketLimiter(rate_per_second=5.0 / 60.0, capacity=5.0)
+        request.app.state.insights_limiter = limiter
+    return limiter
+
+
+async def check_insights_rate_limit(
+    request: Request,
+    limiter: Annotated[TokenBucketLimiter, Depends(get_insights_limiter)],
+) -> None:
+    """Enforce 5 requests per minute per client IP rate limiting on insights analysis."""
+    ip = get_client_ip(request)
+    allowed, retry_after = await limiter.acquire(ip)
+    if not allowed:
+        retry_seconds = max(1, int(retry_after + 0.99))
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=(
+                "Rate limit exceeded: analysis requests are restricted to 5 per minute per IP. "
+                f"Please retry after {retry_seconds}s."
+            ),
+            headers={"Retry-After": str(retry_seconds)},
+        )
+
+
+def get_advisor_service(request: Request) -> AdvisorService:
+    """Retrieve or lazily initialize the AdvisorService on app.state."""
+    service = getattr(request.app.state, "advisor_service", None)
+    from appflow.advisor.service import AdvisorService as _AdvisorService
+
+    if not isinstance(service, _AdvisorService):
+        from appflow.advisor.gemini_client import GeminiAdvisorClient
+
+        settings = get_settings(request)
+        api_key_str = (
+            settings.gemini_api_key.get_secret_value() if settings.gemini_api_key else None
+        )
+        gemini_client = GeminiAdvisorClient(
+            api_key=api_key_str,
+            model=settings.gemini_model,
+            timeout_s=settings.advisor_timeout_s,
+        )
+        service = _AdvisorService(client=gemini_client, cache_ttl_s=60.0)
+        request.app.state.advisor_service = service
+    return service

@@ -17,9 +17,11 @@ from appflow.advisor.models import (
     RecommendationCategory,
 )
 from appflow.advisor.prompts import SYSTEM_INSTRUCTION, build_analysis_user_prompt
+from appflow.advisor.service import AdvisorService
 
 __all__ = [
     "SYSTEM_INSTRUCTION",
+    "AdvisorService",
     "AnalyzeRequest",
     "Bottleneck",
     "DigestEdge",

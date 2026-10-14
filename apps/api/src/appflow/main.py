@@ -10,8 +10,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from appflow import __version__
+from appflow.advisor import AdvisorService, GeminiAdvisorClient
 from appflow.api import (
     routes_health,
+    routes_insights,
     routes_meta,
     routes_simulation,
     routes_topology,
@@ -44,9 +46,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         hub = StreamHub(source=source, aggregator=aggregator, settings=resolved)
         await hub.start()
 
+        api_key_str = (
+            resolved.gemini_api_key.get_secret_value() if resolved.gemini_api_key else None
+        )
+        advisor_client = GeminiAdvisorClient(
+            api_key=api_key_str,
+            model=resolved.gemini_model,
+            timeout_s=resolved.advisor_timeout_s,
+        )
+        advisor_service = AdvisorService(client=advisor_client, cache_ttl_s=60.0)
+
         app.state.source = source
         app.state.aggregator = aggregator
         app.state.hub = hub
+        app.state.advisor_service = advisor_service
 
         yield
 
@@ -64,8 +77,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.source = None
     app.state.aggregator = None
     app.state.hub = None
-    # Per-app isolated token-bucket limiter for scenario activations (1 req / 10s)
+    app.state.advisor_service = None
+
+    # Per-app isolated token-bucket limiters
+    # Scenario activations: 1 req / 10s
     app.state.scenario_limiter = TokenBucketLimiter(rate_per_second=0.1, capacity=1.0)
+    # Insights analyses: 5 req / 60s
+    app.state.insights_limiter = TokenBucketLimiter(rate_per_second=5.0 / 60.0, capacity=5.0)
 
     # CORS configuration per ALLOWED_ORIGINS
     app.add_middleware(
@@ -81,6 +99,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(routes_meta.router)
     app.include_router(routes_topology.router)
     app.include_router(routes_simulation.router)
+    app.include_router(routes_insights.router)
     app.include_router(ws_topology.router)
 
     return app
