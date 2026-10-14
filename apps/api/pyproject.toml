@@ -23,7 +23,7 @@ dev = [
     "pytest-asyncio>=0.24",
     "pytest-cov>=6.0",
     "httpx2>=0.1",
-    "hypothesis>=6.120",
+    "hypothesis>=6.169.0",
     "types-psutil>=6.1",
 ]
 
