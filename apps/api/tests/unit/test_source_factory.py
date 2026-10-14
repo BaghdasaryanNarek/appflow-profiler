@@ -31,16 +31,33 @@ def test_build_source_live() -> None:
     assert isinstance(source, PsutilSource)
 
 
-def test_build_source_demo_raises_phase5_notice() -> None:
+def test_build_source_demo() -> None:
     settings = Settings(env=Environment.DEMO)
-    with pytest.raises(RuntimeError, match="Phase 5"):
-        build_source(settings)
+    source = build_source(settings)
+    assert isinstance(source, TopologySource)
+    assert source.__class__.__name__ == "SimulationSource"
 
 
-def test_build_source_test_raises_phase5_notice() -> None:
+def test_build_source_test() -> None:
     settings = Settings(env=Environment.TEST)
-    with pytest.raises(RuntimeError, match="Phase 5"):
-        build_source(settings)
+    source = build_source(settings)
+    assert isinstance(source, TopologySource)
+    assert source.__class__.__name__ == "SimulationSource"
+
+
+def test_demo_mode_no_psutil_subprocess() -> None:
+    """Building demo source and stepping simulation must never import psutil."""
+    code = (
+        "import sys, asyncio\n"
+        "from appflow.config import Settings, Environment\n"
+        "from appflow.sources.factory import build_source\n"
+        "settings = Settings(env=Environment.DEMO)\n"
+        "source = build_source(settings)\n"
+        "asyncio.run(source.sample())\n"
+        "assert 'psutil' not in sys.modules, f'psutil leaked: {sys.modules.get(\"psutil\")}'\n"
+    )
+    res = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=False)
+    assert res.returncode == 0, f"Subprocess failed with stderr:\n{res.stderr}"
 
 
 def test_build_source_unsupported_mode() -> None:
