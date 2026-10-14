@@ -4,13 +4,16 @@ import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Activity, Cpu } from "lucide-react";
+import { useTopologyStore } from "@/store/topology-store";
 
 export interface ModeBadgeProps {
   mode?: "live" | "demo" | "test";
   className?: string;
 }
 
-export function ModeBadge({ mode = "demo", className }: ModeBadgeProps) {
+export function ModeBadge({ mode: propMode, className }: ModeBadgeProps) {
+  const storeMode = useTopologyStore((s) => s.meta?.mode);
+  const mode = propMode ?? storeMode ?? "demo";
   const isLive = mode === "live";
 
   return (

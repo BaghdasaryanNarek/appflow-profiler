@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Card, CardContent } from "@/components/ui/card";
-import { Activity, Network, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { Network } from "lucide-react";
+import { TopologyLiveStrip } from "@/components/topology/TopologyLiveStrip";
 
 export const metadata: Metadata = {
   title: "Topology | AppFlow Profiler",
@@ -17,58 +17,8 @@ export default function TopologyPage() {
         </p>
       </div>
 
-      {/* KPI Metric Strip */}
-      <div className="@container">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-4">
-          <Card className="glass-surface">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[oklch(0.70_0.15_255_/_0.15)] text-[var(--accent)]">
-                <Network className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-[var(--fg-muted)]">Active Nodes</p>
-                <p className="text-xl font-bold text-[var(--fg)] tabular-nums">--</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-surface">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[oklch(0.72_0.16_145_/_0.15)] text-[var(--ok)]">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-[var(--fg-muted)]">Health Ratio</p>
-                <p className="text-xl font-bold text-[var(--ok)] tabular-nums">100%</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-surface">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[oklch(0.75_0.16_75_/_0.15)] text-[var(--warn)]">
-                <Activity className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-[var(--fg-muted)]">Throughput</p>
-                <p className="text-xl font-bold text-[var(--fg)] tabular-nums">0 B/s</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-surface">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[oklch(0.70_0.15_255_/_0.15)] text-[var(--accent)]">
-                <ArrowUpRight className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-[var(--fg-muted)]">Latency (P99)</p>
-                <p className="text-xl font-bold text-[var(--fg)] tabular-nums">-- ms</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      {/* Real-time KPI Metric Strip & Stream Status */}
+      <TopologyLiveStrip />
 
       {/* Canvas Container Placeholder */}
       <div
@@ -83,7 +33,7 @@ export default function TopologyPage() {
         <h2 className="text-lg font-semibold text-[var(--fg)]">Topology Canvas Island</h2>
         <p className="mt-1 max-w-md text-xs text-[var(--fg-muted)]">
           Interactive React Flow canvas with ELK layered layout, real-time edge flow particles, and
-          socket inspection sheets will mount here in Phase 11.
+          socket inspection sheets will mount here in Phase 12.
         </p>
       </div>
     </div>

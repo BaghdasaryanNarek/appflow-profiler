@@ -6,6 +6,8 @@ import { ConnectionIndicator, type ConnectionStatus } from "./ConnectionIndicato
 import { Button } from "@/components/ui/button";
 import { Search, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTopologyStore } from "@/store/topology-store";
+import { useUiStore } from "@/store/ui-store";
 
 export interface TopBarProps {
   onOpenCommandMenu?: () => void;
@@ -19,11 +21,19 @@ export interface TopBarProps {
 export function TopBar({
   onOpenCommandMenu,
   onOpenMobileNav,
-  connectionStatus = "connected",
-  mode = "demo",
-  activeScenario,
+  connectionStatus: propConnectionStatus,
+  mode: propMode,
+  activeScenario: propActiveScenario,
   className,
 }: TopBarProps) {
+  const storeMode = useTopologyStore((s) => s.meta?.mode);
+  const storeScenario = useTopologyStore((s) => s.activeScenario?.name);
+  const storeStatus = useUiStore((s) => s.connectionStatus);
+
+  const mode = propMode ?? storeMode ?? "demo";
+  const activeScenario = propActiveScenario ?? storeScenario;
+  const connectionStatus = propConnectionStatus ?? storeStatus;
+
   return (
     <header
       className={cn(
