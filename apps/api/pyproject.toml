@@ -13,6 +13,7 @@ dependencies = [
     "psutil>=6.1",
     "structlog>=24.4",
     "uvicorn[standard]>=0.32",
+    "google-genai>=2.25.0",
 ]
 
 [dependency-groups]
