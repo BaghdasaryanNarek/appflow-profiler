@@ -1,0 +1,875 @@
+{
+  "$defs": {
+    "Capabilities": {
+      "additionalProperties": false,
+      "description": "Runtime engine capability flags.",
+      "properties": {
+        "ai_advisor": {
+          "title": "Ai Advisor",
+          "type": "boolean"
+        },
+        "connection_owner": {
+          "title": "Connection Owner",
+          "type": "boolean"
+        },
+        "per_process_io": {
+          "title": "Per Process Io",
+          "type": "boolean"
+        },
+        "scenarios": {
+          "title": "Scenarios",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "per_process_io",
+        "connection_owner",
+        "ai_advisor",
+        "scenarios"
+      ],
+      "title": "Capabilities",
+      "type": "object"
+    },
+    "ConnState": {
+      "description": "TCP socket connection lifecycle states.",
+      "enum": [
+        "ESTABLISHED",
+        "SYN_SENT",
+        "SYN_RECV",
+        "FIN_WAIT1",
+        "FIN_WAIT2",
+        "TIME_WAIT",
+        "CLOSE",
+        "CLOSE_WAIT",
+        "LAST_ACK",
+        "LISTEN",
+        "CLOSING",
+        "NONE"
+      ],
+      "title": "ConnState",
+      "type": "string"
+    },
+    "Edge": {
+      "additionalProperties": false,
+      "description": "Directed connection between two topology nodes.",
+      "properties": {
+        "health": {
+          "$ref": "#/$defs/HealthStatus",
+          "description": "Derived edge health status"
+        },
+        "id": {
+          "description": "Deterministic edge identifier",
+          "title": "Id",
+          "type": "string"
+        },
+        "metrics": {
+          "$ref": "#/$defs/EdgeMetrics",
+          "description": "Communication telemetry"
+        },
+        "protocol": {
+          "$ref": "#/$defs/Protocol",
+          "description": "Observed protocol"
+        },
+        "source": {
+          "description": "Source node ID",
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "description": "Target node ID",
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "target",
+        "protocol",
+        "health",
+        "metrics"
+      ],
+      "title": "Edge",
+      "type": "object"
+    },
+    "EdgeDetail": {
+      "additionalProperties": false,
+      "description": "Deep technical disclosure payload for an inspected edge.",
+      "properties": {
+        "edge": {
+          "$ref": "#/$defs/Edge"
+        },
+        "history": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "description": "Ring-buffer sparkline series",
+          "title": "History",
+          "type": "object"
+        }
+      },
+      "required": [
+        "edge"
+      ],
+      "title": "EdgeDetail",
+      "type": "object"
+    },
+    "EdgeMetrics": {
+      "additionalProperties": false,
+      "description": "Traffic and socket state breakdown for a directed communication edge.",
+      "properties": {
+        "bytes_per_sec": {
+          "description": "Byte throughput rate",
+          "minimum": 0.0,
+          "title": "Bytes Per Sec",
+          "type": "number"
+        },
+        "connection_count": {
+          "description": "Observed concurrent socket count",
+          "minimum": 0,
+          "title": "Connection Count",
+          "type": "integer"
+        },
+        "error_rate": {
+          "description": "Edge communication error rate",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Error Rate",
+          "type": "number"
+        },
+        "p99_ms": {
+          "description": "99th percentile round-trip latency in ms",
+          "minimum": 0.0,
+          "title": "P99 Ms",
+          "type": "number"
+        },
+        "quality": {
+          "$ref": "#/$defs/MetricQuality",
+          "description": "Telemetry fidelity indicator"
+        },
+        "retry_rate": {
+          "default": 0.0,
+          "description": "Retry amplification ratio",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Retry Rate",
+          "type": "number"
+        },
+        "rps": {
+          "description": "Requests per second flowing across edge",
+          "minimum": 0.0,
+          "title": "Rps",
+          "type": "number"
+        },
+        "state_breakdown": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "description": "Sockets per TCP state",
+          "propertyNames": {
+            "$ref": "#/$defs/ConnState"
+          },
+          "title": "State Breakdown",
+          "type": "object"
+        }
+      },
+      "required": [
+        "rps",
+        "bytes_per_sec",
+        "p99_ms",
+        "error_rate",
+        "connection_count",
+        "quality"
+      ],
+      "title": "EdgeMetrics",
+      "type": "object"
+    },
+    "HealthStatus": {
+      "description": "Observable operational health of an entity.",
+      "enum": [
+        "healthy",
+        "degraded",
+        "critical",
+        "unknown"
+      ],
+      "title": "HealthStatus",
+      "type": "string"
+    },
+    "MetaLimits": {
+      "additionalProperties": false,
+      "description": "Configured operational limits.",
+      "properties": {
+        "max_nodes": {
+          "minimum": 1,
+          "title": "Max Nodes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "max_nodes"
+      ],
+      "title": "MetaLimits",
+      "type": "object"
+    },
+    "MetaResponse": {
+      "additionalProperties": false,
+      "description": "Engine metadata and capability negotiation payload.",
+      "properties": {
+        "capabilities": {
+          "$ref": "#/$defs/Capabilities"
+        },
+        "limits": {
+          "$ref": "#/$defs/MetaLimits"
+        },
+        "mode": {
+          "$ref": "#/$defs/SourceMode"
+        },
+        "tick_ms": {
+          "minimum": 1,
+          "title": "Tick Ms",
+          "type": "integer"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "mode",
+        "tick_ms",
+        "capabilities",
+        "limits"
+      ],
+      "title": "MetaResponse",
+      "type": "object"
+    },
+    "MetricQuality": {
+      "description": "Telemetry fidelity indicator transparently surfaced in UI.",
+      "enum": [
+        "measured",
+        "estimated",
+        "simulated"
+      ],
+      "title": "MetricQuality",
+      "type": "string"
+    },
+    "NeighbourRef": {
+      "additionalProperties": false,
+      "description": "Adjacent node metadata reference for fast topology traversal.",
+      "properties": {
+        "edge_id": {
+          "title": "Edge Id",
+          "type": "string"
+        },
+        "health": {
+          "$ref": "#/$defs/HealthStatus"
+        },
+        "kind": {
+          "$ref": "#/$defs/NodeKind"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "node_id": {
+          "title": "Node Id",
+          "type": "string"
+        },
+        "protocol": {
+          "$ref": "#/$defs/Protocol"
+        },
+        "rps": {
+          "minimum": 0.0,
+          "title": "Rps",
+          "type": "number"
+        }
+      },
+      "required": [
+        "node_id",
+        "label",
+        "kind",
+        "health",
+        "edge_id",
+        "protocol",
+        "rps"
+      ],
+      "title": "NeighbourRef",
+      "type": "object"
+    },
+    "Node": {
+      "additionalProperties": false,
+      "description": "Graph vertex representing a service, process, datastore or external boundary.",
+      "properties": {
+        "group_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Parent service group identifier",
+          "title": "Group Id"
+        },
+        "health": {
+          "$ref": "#/$defs/HealthStatus",
+          "description": "Derived health assessment"
+        },
+        "health_reasons": {
+          "description": "Threshold violations explaining health",
+          "items": {
+            "type": "string"
+          },
+          "title": "Health Reasons",
+          "type": "array"
+        },
+        "id": {
+          "description": "Deterministic entity identifier",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/NodeKind",
+          "description": "Node structural role"
+        },
+        "label": {
+          "description": "Display label",
+          "maxLength": 64,
+          "title": "Label",
+          "type": "string"
+        },
+        "metrics": {
+          "$ref": "#/$defs/NodeMetrics",
+          "description": "Observed or estimated performance metrics"
+        },
+        "process": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProcessInfo"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "OS process metadata if known"
+        },
+        "tags": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Arbitrary service categorization",
+          "title": "Tags",
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "label",
+        "health",
+        "metrics"
+      ],
+      "title": "Node",
+      "type": "object"
+    },
+    "NodeDetail": {
+      "additionalProperties": false,
+      "description": "Deep technical disclosure payload for an inspected node (Level 2).",
+      "properties": {
+        "history": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "description": "Ring-buffer sparkline series",
+          "title": "History",
+          "type": "object"
+        },
+        "neighbours": {
+          "$ref": "#/$defs/NodeNeighbours"
+        },
+        "node": {
+          "$ref": "#/$defs/Node"
+        },
+        "sockets": {
+          "items": {
+            "$ref": "#/$defs/SocketInfo"
+          },
+          "title": "Sockets",
+          "type": "array"
+        }
+      },
+      "required": [
+        "node"
+      ],
+      "title": "NodeDetail",
+      "type": "object"
+    },
+    "NodeKind": {
+      "description": "Categorical classification of topology nodes.",
+      "enum": [
+        "service",
+        "process",
+        "datastore",
+        "cache",
+        "queue",
+        "gateway",
+        "external",
+        "client"
+      ],
+      "title": "NodeKind",
+      "type": "string"
+    },
+    "NodeMetrics": {
+      "additionalProperties": false,
+      "description": "Aggregate runtime performance metrics for a node.",
+      "properties": {
+        "cpu_percent": {
+          "description": "CPU usage across cores",
+          "minimum": 0.0,
+          "title": "Cpu Percent",
+          "type": "number"
+        },
+        "error_rate": {
+          "description": "Fraction of requests failing",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Error Rate",
+          "type": "number"
+        },
+        "open_connections": {
+          "description": "Total active socket handles",
+          "minimum": 0,
+          "title": "Open Connections",
+          "type": "integer"
+        },
+        "p50_ms": {
+          "description": "50th percentile latency in milliseconds",
+          "minimum": 0.0,
+          "title": "P50 Ms",
+          "type": "number"
+        },
+        "p99_ms": {
+          "description": "99th percentile latency in milliseconds",
+          "minimum": 0.0,
+          "title": "P99 Ms",
+          "type": "number"
+        },
+        "quality": {
+          "$ref": "#/$defs/MetricQuality",
+          "description": "Telemetry fidelity indicator"
+        },
+        "rps": {
+          "description": "Requests per second",
+          "minimum": 0.0,
+          "title": "Rps",
+          "type": "number"
+        },
+        "rss_bytes": {
+          "description": "Resident memory size in bytes",
+          "minimum": 0,
+          "title": "Rss Bytes",
+          "type": "integer"
+        },
+        "saturation": {
+          "description": "Capacity utilization ratio [0.0, 1.0]",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Saturation",
+          "type": "number"
+        }
+      },
+      "required": [
+        "rps",
+        "p50_ms",
+        "p99_ms",
+        "error_rate",
+        "saturation",
+        "cpu_percent",
+        "rss_bytes",
+        "open_connections",
+        "quality"
+      ],
+      "title": "NodeMetrics",
+      "type": "object"
+    },
+    "NodeNeighbours": {
+      "additionalProperties": false,
+      "description": "Directed neighbours of an entity.",
+      "properties": {
+        "down": {
+          "items": {
+            "$ref": "#/$defs/NeighbourRef"
+          },
+          "title": "Down",
+          "type": "array"
+        },
+        "up": {
+          "items": {
+            "$ref": "#/$defs/NeighbourRef"
+          },
+          "title": "Up",
+          "type": "array"
+        }
+      },
+      "title": "NodeNeighbours",
+      "type": "object"
+    },
+    "ProcessInfo": {
+      "additionalProperties": false,
+      "description": "Host process telemetry metadata.",
+      "properties": {
+        "cmdline_sanitized": {
+          "description": "Redacted command line invocation",
+          "title": "Cmdline Sanitized",
+          "type": "string"
+        },
+        "create_time": {
+          "description": "Process start epoch in seconds",
+          "minimum": 0.0,
+          "title": "Create Time",
+          "type": "number"
+        },
+        "name": {
+          "description": "Process executable name",
+          "title": "Name",
+          "type": "string"
+        },
+        "num_threads": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Active thread count",
+          "title": "Num Threads"
+        },
+        "pid": {
+          "description": "Process identifier",
+          "minimum": 0,
+          "title": "Pid",
+          "type": "integer"
+        },
+        "ppid": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Parent process identifier",
+          "title": "Ppid"
+        },
+        "username": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Operating system username",
+          "title": "Username"
+        }
+      },
+      "required": [
+        "pid",
+        "name",
+        "cmdline_sanitized",
+        "create_time"
+      ],
+      "title": "ProcessInfo",
+      "type": "object"
+    },
+    "Protocol": {
+      "description": "Transport and application-layer protocols observed on edges.",
+      "enum": [
+        "tcp",
+        "udp",
+        "http",
+        "grpc",
+        "pg",
+        "redis",
+        "kafka"
+      ],
+      "title": "Protocol",
+      "type": "string"
+    },
+    "ScenarioInfo": {
+      "additionalProperties": false,
+      "description": "Simulation scenario descriptor.",
+      "properties": {
+        "active": {
+          "title": "Active",
+          "type": "boolean"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "duration_s": {
+          "minimum": 0,
+          "title": "Duration S",
+          "type": "integer"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "duration_s",
+        "active"
+      ],
+      "title": "ScenarioInfo",
+      "type": "object"
+    },
+    "SocketInfo": {
+      "additionalProperties": false,
+      "description": "Granular TCP socket representation.",
+      "properties": {
+        "local_addr": {
+          "title": "Local Addr",
+          "type": "string"
+        },
+        "local_port": {
+          "maximum": 65535,
+          "minimum": 0,
+          "title": "Local Port",
+          "type": "integer"
+        },
+        "pid": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pid"
+        },
+        "protocol": {
+          "$ref": "#/$defs/Protocol"
+        },
+        "remote_addr": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Remote Addr"
+        },
+        "remote_port": {
+          "anyOf": [
+            {
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Remote Port"
+        },
+        "state": {
+          "$ref": "#/$defs/ConnState"
+        }
+      },
+      "required": [
+        "local_addr",
+        "local_port",
+        "state",
+        "protocol"
+      ],
+      "title": "SocketInfo",
+      "type": "object"
+    },
+    "SourceMode": {
+      "description": "Origin of topology telemetry.",
+      "enum": [
+        "live",
+        "demo"
+      ],
+      "title": "SourceMode",
+      "type": "string"
+    },
+    "TopologyGraph": {
+      "additionalProperties": false,
+      "description": "Full snapshot of the network topology graph at a point in time.",
+      "properties": {
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/Edge"
+          },
+          "title": "Edges",
+          "type": "array"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/Node"
+          },
+          "title": "Nodes",
+          "type": "array"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        }
+      },
+      "title": "TopologyGraph",
+      "type": "object"
+    },
+    "TopologySummary": {
+      "additionalProperties": false,
+      "description": "Compact SSR payload for instant LCP paint (Master Plan \u00a74.3).",
+      "properties": {
+        "active_scenario": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Active simulation scenario name",
+          "title": "Active Scenario"
+        },
+        "critical_count": {
+          "description": "Count of critical entities",
+          "minimum": 0,
+          "title": "Critical Count",
+          "type": "integer"
+        },
+        "degraded_count": {
+          "description": "Count of degraded entities",
+          "minimum": 0,
+          "title": "Degraded Count",
+          "type": "integer"
+        },
+        "edge_count": {
+          "description": "Total active edges",
+          "minimum": 0,
+          "title": "Edge Count",
+          "type": "integer"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "global_error_rate": {
+          "description": "Fleet-wide error fraction",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Global Error Rate",
+          "type": "number"
+        },
+        "global_p99_ms": {
+          "description": "Global 99th percentile latency",
+          "minimum": 0.0,
+          "title": "Global P99 Ms",
+          "type": "number"
+        },
+        "mode": {
+          "$ref": "#/$defs/SourceMode",
+          "description": "Runtime data origin"
+        },
+        "node_count": {
+          "description": "Total active nodes",
+          "minimum": 0,
+          "title": "Node Count",
+          "type": "integer"
+        },
+        "total_rps": {
+          "description": "Total request throughput",
+          "minimum": 0.0,
+          "title": "Total Rps",
+          "type": "number"
+        }
+      },
+      "required": [
+        "mode",
+        "node_count",
+        "edge_count",
+        "total_rps",
+        "global_p99_ms",
+        "global_error_rate",
+        "critical_count",
+        "degraded_count"
+      ],
+      "title": "TopologySummary",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Aggregate bundle generating schemas for all graph entities and REST payloads.",
+  "properties": {
+    "edge_detail": {
+      "$ref": "#/$defs/EdgeDetail"
+    },
+    "graph": {
+      "$ref": "#/$defs/TopologyGraph"
+    },
+    "meta": {
+      "$ref": "#/$defs/MetaResponse"
+    },
+    "node_detail": {
+      "$ref": "#/$defs/NodeDetail"
+    },
+    "scenario": {
+      "$ref": "#/$defs/ScenarioInfo"
+    },
+    "summary": {
+      "$ref": "#/$defs/TopologySummary"
+    }
+  },
+  "required": [
+    "graph",
+    "summary",
+    "node_detail",
+    "edge_detail",
+    "meta",
+    "scenario"
+  ],
+  "title": "TopologySchemaBundle",
+  "type": "object"
+}

@@ -1,0 +1,1534 @@
+{
+  "$defs": {
+    "Capabilities": {
+      "additionalProperties": false,
+      "description": "Runtime engine capability flags.",
+      "properties": {
+        "ai_advisor": {
+          "title": "Ai Advisor",
+          "type": "boolean"
+        },
+        "connection_owner": {
+          "title": "Connection Owner",
+          "type": "boolean"
+        },
+        "per_process_io": {
+          "title": "Per Process Io",
+          "type": "boolean"
+        },
+        "scenarios": {
+          "title": "Scenarios",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "per_process_io",
+        "connection_owner",
+        "ai_advisor",
+        "scenarios"
+      ],
+      "title": "Capabilities",
+      "type": "object"
+    },
+    "ClientPauseMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/EmptyPayload"
+        },
+        "seq": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seq"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "pause",
+          "default": "pause",
+          "title": "Type",
+          "type": "string"
+        },
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        }
+      },
+      "title": "ClientPauseMessage",
+      "type": "object"
+    },
+    "ClientPingMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/EmptyPayload"
+        },
+        "seq": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seq"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "ping",
+          "default": "ping",
+          "title": "Type",
+          "type": "string"
+        },
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        }
+      },
+      "title": "ClientPingMessage",
+      "type": "object"
+    },
+    "ClientResumeMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/EmptyPayload"
+        },
+        "seq": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seq"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "resume",
+          "default": "resume",
+          "title": "Type",
+          "type": "string"
+        },
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        }
+      },
+      "title": "ClientResumeMessage",
+      "type": "object"
+    },
+    "ClientResyncMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/ResyncPayload"
+        },
+        "seq": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seq"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "resync",
+          "default": "resync",
+          "title": "Type",
+          "type": "string"
+        },
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        }
+      },
+      "title": "ClientResyncMessage",
+      "type": "object"
+    },
+    "ClientSubscribeMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/SubscribePayload"
+        },
+        "seq": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seq"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "subscribe",
+          "default": "subscribe",
+          "title": "Type",
+          "type": "string"
+        },
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        }
+      },
+      "title": "ClientSubscribeMessage",
+      "type": "object"
+    },
+    "ClientUpdateFiltersMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/UpdateFiltersPayload"
+        },
+        "seq": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seq"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "update_filters",
+          "default": "update_filters",
+          "title": "Type",
+          "type": "string"
+        },
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        }
+      },
+      "title": "ClientUpdateFiltersMessage",
+      "type": "object"
+    },
+    "ConnState": {
+      "description": "TCP socket connection lifecycle states.",
+      "enum": [
+        "ESTABLISHED",
+        "SYN_SENT",
+        "SYN_RECV",
+        "FIN_WAIT1",
+        "FIN_WAIT2",
+        "TIME_WAIT",
+        "CLOSE",
+        "CLOSE_WAIT",
+        "LAST_ACK",
+        "LISTEN",
+        "CLOSING",
+        "NONE"
+      ],
+      "title": "ConnState",
+      "type": "string"
+    },
+    "DeltaPayload": {
+      "additionalProperties": false,
+      "description": "Incremental topology diff payload applied over base_seq.",
+      "properties": {
+        "added_edges": {
+          "items": {
+            "$ref": "#/$defs/Edge"
+          },
+          "title": "Added Edges",
+          "type": "array"
+        },
+        "added_nodes": {
+          "items": {
+            "$ref": "#/$defs/Node"
+          },
+          "title": "Added Nodes",
+          "type": "array"
+        },
+        "base_seq": {
+          "description": "Sequence delta builds upon",
+          "minimum": 0,
+          "title": "Base Seq",
+          "type": "integer"
+        },
+        "removed_edge_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Removed Edge Ids",
+          "type": "array"
+        },
+        "removed_node_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Removed Node Ids",
+          "type": "array"
+        },
+        "updated_edges": {
+          "items": {
+            "$ref": "#/$defs/EdgePatch"
+          },
+          "title": "Updated Edges",
+          "type": "array"
+        },
+        "updated_nodes": {
+          "items": {
+            "$ref": "#/$defs/NodePatch"
+          },
+          "title": "Updated Nodes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "base_seq"
+      ],
+      "title": "DeltaPayload",
+      "type": "object"
+    },
+    "Edge": {
+      "additionalProperties": false,
+      "description": "Directed connection between two topology nodes.",
+      "properties": {
+        "health": {
+          "$ref": "#/$defs/HealthStatus",
+          "description": "Derived edge health status"
+        },
+        "id": {
+          "description": "Deterministic edge identifier",
+          "title": "Id",
+          "type": "string"
+        },
+        "metrics": {
+          "$ref": "#/$defs/EdgeMetrics",
+          "description": "Communication telemetry"
+        },
+        "protocol": {
+          "$ref": "#/$defs/Protocol",
+          "description": "Observed protocol"
+        },
+        "source": {
+          "description": "Source node ID",
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "description": "Target node ID",
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "target",
+        "protocol",
+        "health",
+        "metrics"
+      ],
+      "title": "Edge",
+      "type": "object"
+    },
+    "EdgeMetrics": {
+      "additionalProperties": false,
+      "description": "Traffic and socket state breakdown for a directed communication edge.",
+      "properties": {
+        "bytes_per_sec": {
+          "description": "Byte throughput rate",
+          "minimum": 0.0,
+          "title": "Bytes Per Sec",
+          "type": "number"
+        },
+        "connection_count": {
+          "description": "Observed concurrent socket count",
+          "minimum": 0,
+          "title": "Connection Count",
+          "type": "integer"
+        },
+        "error_rate": {
+          "description": "Edge communication error rate",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Error Rate",
+          "type": "number"
+        },
+        "p99_ms": {
+          "description": "99th percentile round-trip latency in ms",
+          "minimum": 0.0,
+          "title": "P99 Ms",
+          "type": "number"
+        },
+        "quality": {
+          "$ref": "#/$defs/MetricQuality",
+          "description": "Telemetry fidelity indicator"
+        },
+        "retry_rate": {
+          "default": 0.0,
+          "description": "Retry amplification ratio",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Retry Rate",
+          "type": "number"
+        },
+        "rps": {
+          "description": "Requests per second flowing across edge",
+          "minimum": 0.0,
+          "title": "Rps",
+          "type": "number"
+        },
+        "state_breakdown": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "description": "Sockets per TCP state",
+          "propertyNames": {
+            "$ref": "#/$defs/ConnState"
+          },
+          "title": "State Breakdown",
+          "type": "object"
+        }
+      },
+      "required": [
+        "rps",
+        "bytes_per_sec",
+        "p99_ms",
+        "error_rate",
+        "connection_count",
+        "quality"
+      ],
+      "title": "EdgeMetrics",
+      "type": "object"
+    },
+    "EdgePatch": {
+      "additionalProperties": false,
+      "description": "Sparse differential update for an existing edge.",
+      "properties": {
+        "health": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HealthStatus"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EdgeMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "EdgePatch",
+      "type": "object"
+    },
+    "EmptyPayload": {
+      "additionalProperties": false,
+      "description": "Payload for parameterless signal messages (pause, resume, ping).",
+      "properties": {},
+      "title": "EmptyPayload",
+      "type": "object"
+    },
+    "ErrorPayload": {
+      "additionalProperties": false,
+      "description": "Protocol-level error notification.",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "title",
+        "detail"
+      ],
+      "title": "ErrorPayload",
+      "type": "object"
+    },
+    "HealthEventPayload": {
+      "additionalProperties": false,
+      "description": "Entity health status transition notification for screen-reader live announcements.",
+      "properties": {
+        "entity_id": {
+          "title": "Entity Id",
+          "type": "string"
+        },
+        "from": {
+          "$ref": "#/$defs/HealthStatus"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "to": {
+          "$ref": "#/$defs/HealthStatus"
+        }
+      },
+      "required": [
+        "entity_id",
+        "from",
+        "to"
+      ],
+      "title": "HealthEventPayload",
+      "type": "object"
+    },
+    "HealthStatus": {
+      "description": "Observable operational health of an entity.",
+      "enum": [
+        "healthy",
+        "degraded",
+        "critical",
+        "unknown"
+      ],
+      "title": "HealthStatus",
+      "type": "string"
+    },
+    "HeartbeatPayload": {
+      "additionalProperties": false,
+      "description": "Server liveness heartbeat.",
+      "properties": {
+        "tick_age_ms": {
+          "description": "Age of latest engine sample in ms",
+          "minimum": 0,
+          "title": "Tick Age Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "tick_age_ms"
+      ],
+      "title": "HeartbeatPayload",
+      "type": "object"
+    },
+    "HelloPayload": {
+      "additionalProperties": false,
+      "description": "Initial capability and metadata payload on connection accept.",
+      "properties": {
+        "meta": {
+          "$ref": "#/$defs/MetaResponse"
+        },
+        "server_time": {
+          "format": "date-time",
+          "title": "Server Time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "meta"
+      ],
+      "title": "HelloPayload",
+      "type": "object"
+    },
+    "MetaLimits": {
+      "additionalProperties": false,
+      "description": "Configured operational limits.",
+      "properties": {
+        "max_nodes": {
+          "minimum": 1,
+          "title": "Max Nodes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "max_nodes"
+      ],
+      "title": "MetaLimits",
+      "type": "object"
+    },
+    "MetaResponse": {
+      "additionalProperties": false,
+      "description": "Engine metadata and capability negotiation payload.",
+      "properties": {
+        "capabilities": {
+          "$ref": "#/$defs/Capabilities"
+        },
+        "limits": {
+          "$ref": "#/$defs/MetaLimits"
+        },
+        "mode": {
+          "$ref": "#/$defs/SourceMode"
+        },
+        "tick_ms": {
+          "minimum": 1,
+          "title": "Tick Ms",
+          "type": "integer"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "mode",
+        "tick_ms",
+        "capabilities",
+        "limits"
+      ],
+      "title": "MetaResponse",
+      "type": "object"
+    },
+    "MetricQuality": {
+      "description": "Telemetry fidelity indicator transparently surfaced in UI.",
+      "enum": [
+        "measured",
+        "estimated",
+        "simulated"
+      ],
+      "title": "MetricQuality",
+      "type": "string"
+    },
+    "Node": {
+      "additionalProperties": false,
+      "description": "Graph vertex representing a service, process, datastore or external boundary.",
+      "properties": {
+        "group_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Parent service group identifier",
+          "title": "Group Id"
+        },
+        "health": {
+          "$ref": "#/$defs/HealthStatus",
+          "description": "Derived health assessment"
+        },
+        "health_reasons": {
+          "description": "Threshold violations explaining health",
+          "items": {
+            "type": "string"
+          },
+          "title": "Health Reasons",
+          "type": "array"
+        },
+        "id": {
+          "description": "Deterministic entity identifier",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/NodeKind",
+          "description": "Node structural role"
+        },
+        "label": {
+          "description": "Display label",
+          "maxLength": 64,
+          "title": "Label",
+          "type": "string"
+        },
+        "metrics": {
+          "$ref": "#/$defs/NodeMetrics",
+          "description": "Observed or estimated performance metrics"
+        },
+        "process": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProcessInfo"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "OS process metadata if known"
+        },
+        "tags": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Arbitrary service categorization",
+          "title": "Tags",
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "label",
+        "health",
+        "metrics"
+      ],
+      "title": "Node",
+      "type": "object"
+    },
+    "NodeKind": {
+      "description": "Categorical classification of topology nodes.",
+      "enum": [
+        "service",
+        "process",
+        "datastore",
+        "cache",
+        "queue",
+        "gateway",
+        "external",
+        "client"
+      ],
+      "title": "NodeKind",
+      "type": "string"
+    },
+    "NodeMetrics": {
+      "additionalProperties": false,
+      "description": "Aggregate runtime performance metrics for a node.",
+      "properties": {
+        "cpu_percent": {
+          "description": "CPU usage across cores",
+          "minimum": 0.0,
+          "title": "Cpu Percent",
+          "type": "number"
+        },
+        "error_rate": {
+          "description": "Fraction of requests failing",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Error Rate",
+          "type": "number"
+        },
+        "open_connections": {
+          "description": "Total active socket handles",
+          "minimum": 0,
+          "title": "Open Connections",
+          "type": "integer"
+        },
+        "p50_ms": {
+          "description": "50th percentile latency in milliseconds",
+          "minimum": 0.0,
+          "title": "P50 Ms",
+          "type": "number"
+        },
+        "p99_ms": {
+          "description": "99th percentile latency in milliseconds",
+          "minimum": 0.0,
+          "title": "P99 Ms",
+          "type": "number"
+        },
+        "quality": {
+          "$ref": "#/$defs/MetricQuality",
+          "description": "Telemetry fidelity indicator"
+        },
+        "rps": {
+          "description": "Requests per second",
+          "minimum": 0.0,
+          "title": "Rps",
+          "type": "number"
+        },
+        "rss_bytes": {
+          "description": "Resident memory size in bytes",
+          "minimum": 0,
+          "title": "Rss Bytes",
+          "type": "integer"
+        },
+        "saturation": {
+          "description": "Capacity utilization ratio [0.0, 1.0]",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Saturation",
+          "type": "number"
+        }
+      },
+      "required": [
+        "rps",
+        "p50_ms",
+        "p99_ms",
+        "error_rate",
+        "saturation",
+        "cpu_percent",
+        "rss_bytes",
+        "open_connections",
+        "quality"
+      ],
+      "title": "NodeMetrics",
+      "type": "object"
+    },
+    "NodePatch": {
+      "additionalProperties": false,
+      "description": "Sparse differential update for an existing node.",
+      "properties": {
+        "health": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HealthStatus"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "health_reasons": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Health Reasons"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NodeMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "NodePatch",
+      "type": "object"
+    },
+    "ProcessInfo": {
+      "additionalProperties": false,
+      "description": "Host process telemetry metadata.",
+      "properties": {
+        "cmdline_sanitized": {
+          "description": "Redacted command line invocation",
+          "title": "Cmdline Sanitized",
+          "type": "string"
+        },
+        "create_time": {
+          "description": "Process start epoch in seconds",
+          "minimum": 0.0,
+          "title": "Create Time",
+          "type": "number"
+        },
+        "name": {
+          "description": "Process executable name",
+          "title": "Name",
+          "type": "string"
+        },
+        "num_threads": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Active thread count",
+          "title": "Num Threads"
+        },
+        "pid": {
+          "description": "Process identifier",
+          "minimum": 0,
+          "title": "Pid",
+          "type": "integer"
+        },
+        "ppid": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Parent process identifier",
+          "title": "Ppid"
+        },
+        "username": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Operating system username",
+          "title": "Username"
+        }
+      },
+      "required": [
+        "pid",
+        "name",
+        "cmdline_sanitized",
+        "create_time"
+      ],
+      "title": "ProcessInfo",
+      "type": "object"
+    },
+    "Protocol": {
+      "description": "Transport and application-layer protocols observed on edges.",
+      "enum": [
+        "tcp",
+        "udp",
+        "http",
+        "grpc",
+        "pg",
+        "redis",
+        "kafka"
+      ],
+      "title": "Protocol",
+      "type": "string"
+    },
+    "ResyncPayload": {
+      "additionalProperties": false,
+      "description": "Client recovery request after sequence gap or disconnect.",
+      "properties": {
+        "last_seq": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Seq"
+        }
+      },
+      "title": "ResyncPayload",
+      "type": "object"
+    },
+    "ScenarioInfo": {
+      "additionalProperties": false,
+      "description": "Simulation scenario descriptor.",
+      "properties": {
+        "active": {
+          "title": "Active",
+          "type": "boolean"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "duration_s": {
+          "minimum": 0,
+          "title": "Duration S",
+          "type": "integer"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "duration_s",
+        "active"
+      ],
+      "title": "ScenarioInfo",
+      "type": "object"
+    },
+    "ScenarioPayload": {
+      "additionalProperties": false,
+      "description": "Simulation scenario activation or deactivation event.",
+      "properties": {
+        "active": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScenarioInfo"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "ScenarioPayload",
+      "type": "object"
+    },
+    "ServerDeltaMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/DeltaPayload"
+        },
+        "seq": {
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "delta",
+          "default": "delta",
+          "title": "Type",
+          "type": "string"
+        },
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "seq",
+        "payload"
+      ],
+      "title": "ServerDeltaMessage",
+      "type": "object"
+    },
+    "ServerErrorMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/ErrorPayload"
+        },
+        "seq": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seq"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "error",
+          "default": "error",
+          "title": "Type",
+          "type": "string"
+        },
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "payload"
+      ],
+      "title": "ServerErrorMessage",
+      "type": "object"
+    },
+    "ServerHealthEventMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/HealthEventPayload"
+        },
+        "seq": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seq"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "health_event",
+          "default": "health_event",
+          "title": "Type",
+          "type": "string"
+        },
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "payload"
+      ],
+      "title": "ServerHealthEventMessage",
+      "type": "object"
+    },
+    "ServerHeartbeatMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/HeartbeatPayload"
+        },
+        "seq": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seq"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "heartbeat",
+          "default": "heartbeat",
+          "title": "Type",
+          "type": "string"
+        },
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "payload"
+      ],
+      "title": "ServerHeartbeatMessage",
+      "type": "object"
+    },
+    "ServerHelloMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/HelloPayload"
+        },
+        "seq": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seq"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "hello",
+          "default": "hello",
+          "title": "Type",
+          "type": "string"
+        },
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "payload"
+      ],
+      "title": "ServerHelloMessage",
+      "type": "object"
+    },
+    "ServerScenarioMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/ScenarioPayload"
+        },
+        "seq": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seq"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "scenario",
+          "default": "scenario",
+          "title": "Type",
+          "type": "string"
+        },
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "payload"
+      ],
+      "title": "ServerScenarioMessage",
+      "type": "object"
+    },
+    "ServerSnapshotMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/SnapshotPayload"
+        },
+        "seq": {
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "snapshot",
+          "default": "snapshot",
+          "title": "Type",
+          "type": "string"
+        },
+        "v": {
+          "const": 1,
+          "default": 1,
+          "title": "V",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "seq",
+        "payload"
+      ],
+      "title": "ServerSnapshotMessage",
+      "type": "object"
+    },
+    "SnapshotPayload": {
+      "additionalProperties": false,
+      "description": "Full baseline topology graph payload.",
+      "properties": {
+        "graph": {
+          "$ref": "#/$defs/TopologyGraph"
+        }
+      },
+      "required": [
+        "graph"
+      ],
+      "title": "SnapshotPayload",
+      "type": "object"
+    },
+    "SourceMode": {
+      "description": "Origin of topology telemetry.",
+      "enum": [
+        "live",
+        "demo"
+      ],
+      "title": "SourceMode",
+      "type": "string"
+    },
+    "SubscribePayload": {
+      "additionalProperties": false,
+      "description": "Subscription parameters specifying stream filters.",
+      "properties": {
+        "filters": {
+          "$ref": "#/$defs/TopologyFilters"
+        }
+      },
+      "title": "SubscribePayload",
+      "type": "object"
+    },
+    "TopologyFilters": {
+      "additionalProperties": false,
+      "description": "Subscription filtering criteria.",
+      "properties": {
+        "group": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Group"
+        },
+        "kinds": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/NodeKind"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Kinds"
+        },
+        "min_rps": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Rps"
+        }
+      },
+      "title": "TopologyFilters",
+      "type": "object"
+    },
+    "TopologyGraph": {
+      "additionalProperties": false,
+      "description": "Full snapshot of the network topology graph at a point in time.",
+      "properties": {
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/Edge"
+          },
+          "title": "Edges",
+          "type": "array"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/Node"
+          },
+          "title": "Nodes",
+          "type": "array"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        }
+      },
+      "title": "TopologyGraph",
+      "type": "object"
+    },
+    "UpdateFiltersPayload": {
+      "additionalProperties": false,
+      "description": "Update active stream filters.",
+      "properties": {
+        "filters": {
+          "$ref": "#/$defs/TopologyFilters"
+        }
+      },
+      "title": "UpdateFiltersPayload",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Aggregate bundle generating schemas for all real-time WebSocket protocol messages.",
+  "properties": {
+    "client_message": {
+      "discriminator": {
+        "mapping": {
+          "pause": "#/$defs/ClientPauseMessage",
+          "ping": "#/$defs/ClientPingMessage",
+          "resume": "#/$defs/ClientResumeMessage",
+          "resync": "#/$defs/ClientResyncMessage",
+          "subscribe": "#/$defs/ClientSubscribeMessage",
+          "update_filters": "#/$defs/ClientUpdateFiltersMessage"
+        },
+        "propertyName": "type"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ClientSubscribeMessage"
+        },
+        {
+          "$ref": "#/$defs/ClientUpdateFiltersMessage"
+        },
+        {
+          "$ref": "#/$defs/ClientPauseMessage"
+        },
+        {
+          "$ref": "#/$defs/ClientResumeMessage"
+        },
+        {
+          "$ref": "#/$defs/ClientResyncMessage"
+        },
+        {
+          "$ref": "#/$defs/ClientPingMessage"
+        }
+      ],
+      "title": "Client Message"
+    },
+    "server_message": {
+      "discriminator": {
+        "mapping": {
+          "delta": "#/$defs/ServerDeltaMessage",
+          "error": "#/$defs/ServerErrorMessage",
+          "health_event": "#/$defs/ServerHealthEventMessage",
+          "heartbeat": "#/$defs/ServerHeartbeatMessage",
+          "hello": "#/$defs/ServerHelloMessage",
+          "scenario": "#/$defs/ServerScenarioMessage",
+          "snapshot": "#/$defs/ServerSnapshotMessage"
+        },
+        "propertyName": "type"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ServerHelloMessage"
+        },
+        {
+          "$ref": "#/$defs/ServerSnapshotMessage"
+        },
+        {
+          "$ref": "#/$defs/ServerDeltaMessage"
+        },
+        {
+          "$ref": "#/$defs/ServerHealthEventMessage"
+        },
+        {
+          "$ref": "#/$defs/ServerScenarioMessage"
+        },
+        {
+          "$ref": "#/$defs/ServerHeartbeatMessage"
+        },
+        {
+          "$ref": "#/$defs/ServerErrorMessage"
+        }
+      ],
+      "title": "Server Message"
+    }
+  },
+  "required": [
+    "server_message",
+    "client_message"
+  ],
+  "title": "WSProtocolSchemaBundle",
+  "type": "object"
+}
