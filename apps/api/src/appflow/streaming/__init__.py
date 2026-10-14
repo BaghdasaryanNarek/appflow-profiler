@@ -1,5 +1,6 @@
-"""Real-time streaming pipeline: diff engine, aggregator, stream hub and protocol."""
-
+from appflow.streaming.aggregator import TopologyAggregator
+from appflow.streaming.diff import DELTA_EPSILON, DiffEngine
+from appflow.streaming.hub import ClientSession, StreamHub
 from appflow.streaming.protocol import (
     ClientMessage,
     ClientPauseMessage,
@@ -36,14 +37,17 @@ from appflow.streaming.protocol import (
 )
 
 __all__ = [
+    "DELTA_EPSILON",
     "ClientMessage",
     "ClientPauseMessage",
     "ClientPingMessage",
     "ClientResumeMessage",
     "ClientResyncMessage",
+    "ClientSession",
     "ClientSubscribeMessage",
     "ClientUpdateFiltersMessage",
     "DeltaPayload",
+    "DiffEngine",
     "EdgePatch",
     "EmptyPayload",
     "ErrorPayload",
@@ -62,7 +66,9 @@ __all__ = [
     "ServerScenarioMessage",
     "ServerSnapshotMessage",
     "SnapshotPayload",
+    "StreamHub",
     "SubscribePayload",
+    "TopologyAggregator",
     "TopologyFilters",
     "UpdateFiltersPayload",
     "WSMessage",

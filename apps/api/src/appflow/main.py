@@ -9,10 +9,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from appflow import __version__
-from appflow.api import routes_health
+from appflow.api import routes_health, ws_topology
 from appflow.api.errors import register_error_handlers
 from appflow.config import Settings, get_settings
 from appflow.logging import configure_logging, get_logger
+from appflow.sources.factory import build_source
+from appflow.streaming import StreamHub, TopologyAggregator
 
 _log = get_logger(__name__)
 
@@ -28,7 +30,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         _log.info("startup", version=__version__, env=resolved.env.value, tick_ms=resolved.tick_ms)
+        source = build_source(resolved)
+        await source.start()
+        aggregator = TopologyAggregator()
+        hub = StreamHub(source=source, aggregator=aggregator, settings=resolved)
+        await hub.start()
+
+        app.state.source = source
+        app.state.aggregator = aggregator
+        app.state.hub = hub
+
         yield
+
+        await hub.stop()
+        await source.stop()
         _log.info("shutdown")
 
     app = FastAPI(
@@ -38,8 +53,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.settings = resolved
+    app.state.source = None
+    app.state.aggregator = None
+    app.state.hub = None
 
     register_error_handlers(app)
     app.include_router(routes_health.router)
+    app.include_router(ws_topology.router)
 
     return app
