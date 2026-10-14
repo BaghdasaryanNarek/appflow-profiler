@@ -3,7 +3,9 @@ SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
 
 UV ?= uv
+PNPM ?= pnpm
 API_DIR := apps/api
+WEB_DIR := apps/web
 
 .PHONY: help ci api-check api-dev contracts web-check dev
 
@@ -24,10 +26,16 @@ api-dev: ## Run the backend with auto-reload
 	cd $(API_DIR) && $(UV) run uvicorn appflow.main:create_app --factory --reload
 
 contracts: ## Regenerate contracts and verify no drift
-	@echo "contracts: not yet implemented"
+	cd $(API_DIR) && $(UV) run python scripts/export_schema.py
+	$(PNPM) --dir $(WEB_DIR) gen:contracts
+	git diff --exit-code packages/contracts $(WEB_DIR)/src/types
 
 web-check: ## Lint, format-check, type-check, test and build the frontend
-	@echo "web-check: not yet implemented"
+	$(PNPM) --dir $(WEB_DIR) lint
+	$(PNPM) --dir $(WEB_DIR) format:check
+	$(PNPM) --dir $(WEB_DIR) typecheck
+	$(PNPM) --dir $(WEB_DIR) test
+	NEXT_PUBLIC_API_URL="http://localhost:8000" NEXT_PUBLIC_WS_URL="ws://localhost:8000/ws" $(PNPM) --dir $(WEB_DIR) build
 
 dev: ## Run backend and frontend in development mode
 	@echo "dev: not yet implemented"

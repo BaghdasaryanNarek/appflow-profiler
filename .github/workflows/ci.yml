@@ -49,3 +49,91 @@ jobs:
 
       - name: Run tests with pytest
         run: uv run pytest --cov=appflow --cov-fail-under=85 -q
+
+  contracts:
+    name: Contract Drift Check
+    runs-on: ubuntu-latest
+    needs: api
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "apps/api/uv.lock"
+
+      - name: Install Python 3.12
+        run: uv python install 3.12
+
+      - name: Install backend dependencies
+        run: uv sync --frozen --all-extras
+        working-directory: apps/api
+
+      - name: Export JSON Schemas
+        run: uv run python scripts/export_schema.py
+        working-directory: apps/api
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        run: pnpm --dir apps/web install --frozen-lockfile
+
+      - name: Generate TypeScript contract types
+        run: pnpm --dir apps/web gen:contracts
+
+      - name: Verify zero contract or type drift
+        run: git diff --exit-code packages/contracts apps/web/src/types
+
+  web:
+    name: Frontend Quality & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm --dir apps/web install --frozen-lockfile
+
+      - name: Lint with ESLint
+        run: pnpm --dir apps/web lint
+
+      - name: Check formatting with Prettier
+        run: pnpm --dir apps/web format:check
+
+      - name: Type check with TypeScript
+        run: pnpm --dir apps/web typecheck
+
+      - name: Run unit and a11y tests with Vitest
+        run: pnpm --dir apps/web test
+
+      - name: Build Next.js application
+        env:
+          NEXT_PUBLIC_API_URL: "http://localhost:8000"
+          NEXT_PUBLIC_WS_URL: "ws://localhost:8000/ws"
+        run: pnpm --dir apps/web build
