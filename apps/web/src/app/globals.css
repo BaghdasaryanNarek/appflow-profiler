@@ -1,26 +1,136 @@
 @import "tailwindcss";
 
+@theme {
+  --color-bg: oklch(0.14 0.005 260);
+  --color-surface: oklch(0.18 0.006 260 / 0.72);
+  --color-surface-solid: oklch(0.18 0.006 260);
+  --color-border: oklch(1 0 0 / 0.08);
+  --color-border-strong: oklch(1 0 0 / 0.16);
+  --color-fg: oklch(0.96 0 0);
+  --color-fg-muted: oklch(0.72 0.01 260);
+  --color-accent: oklch(0.7 0.15 255);
+  --color-ok: oklch(0.72 0.16 145);
+  --color-warn: oklch(0.75 0.16 75);
+  --color-crit: oklch(0.65 0.22 25);
+  --color-unknown: oklch(0.68 0.04 260);
+
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: oklch(0.14 0.005 260);
+  --surface: oklch(0.18 0.006 260 / 0.72);
+  --surface-solid: oklch(0.18 0.006 260);
+  --border: oklch(1 0 0 / 0.08);
+  --border-strong: oklch(1 0 0 / 0.16);
+  --fg: oklch(0.96 0 0);
+  --fg-muted: oklch(0.72 0.01 260);
+  --accent: oklch(0.7 0.15 255);
+  --accent-muted: oklch(0.7 0.15 255 / 0.15);
+  --ok: oklch(0.72 0.16 145);
+  --warn: oklch(0.75 0.16 75);
+  --crit: oklch(0.65 0.22 25);
+  --unknown: oklch(0.68 0.04 260);
+
+  /* Shadcn semantic mappings */
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --card: var(--surface);
+  --card-foreground: var(--fg);
+  --popover: oklch(0.16 0.006 260);
+  --popover-foreground: var(--fg);
+  --primary: var(--accent);
+  --primary-foreground: oklch(0.12 0.005 260);
+  --secondary: oklch(0.22 0.008 260);
+  --secondary-foreground: var(--fg);
+  --muted: oklch(0.2 0.006 260);
+  --muted-foreground: var(--fg-muted);
+  --accent-surface: oklch(0.24 0.012 260);
+  --accent-foreground: var(--fg);
+  --destructive: var(--crit);
+  --destructive-foreground: oklch(0.98 0 0);
+  --input: var(--border-strong);
+  --ring: var(--accent);
+  --radius: 0.5rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: dark;
+  scrollbar-gutter: stable;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Balanced text wrap for headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-wrap: balance;
+}
+
+/* Tabular figures for numerical metrics */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Glassmorphism utilities with opaque fallback for unsupported/reduced-transparency */
+.glass-surface {
+  background-color: var(--surface-solid);
+  border: 1px solid var(--border);
+}
+
+@supports (backdrop-filter: blur(16px)) {
+  .glass-surface {
+    background-color: var(--surface);
+    backdrop-filter: blur(16px) saturate(140%);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass-surface {
+    background-color: var(--surface-solid) !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* Visible accessible focus rings */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* Smooth view transition timing */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
