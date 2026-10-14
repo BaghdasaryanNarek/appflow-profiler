@@ -9,7 +9,7 @@ authors = [{ name = "Narek Baghdasaryan" }]
 dependencies = [
     "fastapi>=0.115",
     "pydantic>=2.9",
-    "pydantic-settings>=2.6",
+    "pydantic-settings>=2.15.0",
     "psutil>=6.1",
     "structlog>=24.4",
     "uvicorn[standard]>=0.32",
