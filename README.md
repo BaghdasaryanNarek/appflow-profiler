@@ -1,5 +1,7 @@
 # AppFlow Profiler
 
+[![CI](https://github.com/BaghdasaryanNarek/appflow-profiler/actions/workflows/ci.yml/badge.svg)](https://github.com/BaghdasaryanNarek/appflow-profiler/actions/workflows/ci.yml)
+
 > **Status:** 🚧 in development
 
 AppFlow Profiler is an enterprise-grade network topology and observability dashboard for SRE and
