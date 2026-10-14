@@ -7,6 +7,7 @@ from appflow.advisor.digest import (
     TopologyDigest,
     build_digest,
 )
+from appflow.advisor.gemini_client import GeminiAdvisorClient, GeminiAdvisorError
 from appflow.advisor.heuristics import generate_heuristic_report
 from appflow.advisor.models import (
     AnalyzeRequest,
@@ -15,17 +16,22 @@ from appflow.advisor.models import (
     Recommendation,
     RecommendationCategory,
 )
+from appflow.advisor.prompts import SYSTEM_INSTRUCTION, build_analysis_user_prompt
 
 __all__ = [
+    "SYSTEM_INSTRUCTION",
     "AnalyzeRequest",
     "Bottleneck",
     "DigestEdge",
     "DigestNode",
     "DigestTotals",
+    "GeminiAdvisorClient",
+    "GeminiAdvisorError",
     "OptimizationReport",
     "Recommendation",
     "RecommendationCategory",
     "TopologyDigest",
+    "build_analysis_user_prompt",
     "build_digest",
     "generate_heuristic_report",
 ]
