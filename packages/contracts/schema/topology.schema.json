@@ -651,6 +651,28 @@
       "title": "ScenarioInfo",
       "type": "object"
     },
+    "SnapshotResponse": {
+      "additionalProperties": false,
+      "description": "Timestamped sequence snapshot of the filtered or full topology graph.",
+      "properties": {
+        "graph": {
+          "$ref": "#/$defs/TopologyGraph",
+          "description": "Topology graph snapshot"
+        },
+        "seq": {
+          "description": "Monotonic sequence number",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "seq",
+        "graph"
+      ],
+      "title": "SnapshotResponse",
+      "type": "object"
+    },
     "SocketInfo": {
       "additionalProperties": false,
       "description": "Granular TCP socket representation.",
@@ -858,12 +880,16 @@
     "scenario": {
       "$ref": "#/$defs/ScenarioInfo"
     },
+    "snapshot": {
+      "$ref": "#/$defs/SnapshotResponse"
+    },
     "summary": {
       "$ref": "#/$defs/TopologySummary"
     }
   },
   "required": [
     "graph",
+    "snapshot",
     "summary",
     "node_detail",
     "edge_detail",

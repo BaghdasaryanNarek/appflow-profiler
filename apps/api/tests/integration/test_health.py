@@ -1,6 +1,8 @@
 """Health endpoint and error-handling integration tests."""
 
+import time
 from http import HTTPStatus
+from typing import cast
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -17,10 +19,48 @@ def test_healthz_returns_ok(client: TestClient) -> None:
     assert response.json() == {"status": "ok"}
 
 
-def test_readyz_reports_starting_before_stream_hub_exists(client: TestClient) -> None:
+def test_readyz_reports_ok_when_hub_is_fresh(client: TestClient) -> None:
     response = client.get("/readyz")
     assert response.status_code == 200
-    assert response.json() == {"status": "starting", "source_ready": False, "tick_age_ms": None}
+    data = response.json()
+    assert data["status"] == "ok"
+    assert data["source_ready"] is True
+    assert isinstance(data["tick_age_ms"], int)
+    assert data["tick_age_ms"] <= 5000
+
+
+def test_readyz_reports_503_when_hub_uninitialized(settings: Settings) -> None:
+    # Build app without entering lifespan context
+    app = create_app(settings)
+    raw_client = TestClient(app, raise_server_exceptions=False)
+    response = raw_client.get("/readyz")
+    assert response.status_code == 503
+    assert response.headers["content-type"].startswith(PROBLEM_JSON)
+    data = response.json()
+    assert data["status"] == 503
+    assert data["source_ready"] is False
+
+
+def test_readyz_reports_503_when_tick_loop_stalled(client: TestClient) -> None:
+    # Artificially simulate stalled tick loop (> 5000 ms)
+    app = cast("FastAPI", client.app)
+    hub = app.state.hub
+    assert hub is not None
+    original_running = hub._running
+    original_tick = hub._last_tick_monotonic
+    try:
+        hub._running = False
+        hub._last_tick_monotonic = time.monotonic() - 10.0  # 10s age
+        response = client.get("/readyz")
+        assert response.status_code == 503
+        assert response.headers["content-type"].startswith(PROBLEM_JSON)
+        data = response.json()
+        assert data["status"] == 503
+        assert data["source_ready"] is False
+        assert data["tick_age_ms"] >= 5000
+    finally:
+        hub._running = original_running
+        hub._last_tick_monotonic = original_tick
 
 
 def test_app_exposes_settings_and_version(settings: Settings) -> None:

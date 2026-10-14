@@ -20,6 +20,7 @@ from appflow.domain.models import (
     MetaResponse,
     NodeDetail,
     ScenarioInfo,
+    SnapshotResponse,
     TopologyGraph,
     TopologySummary,
 )
@@ -34,6 +35,7 @@ class TopologySchemaBundle(BaseModel):
     model_config = FROZEN_MODEL_CONFIG
 
     graph: TopologyGraph
+    snapshot: SnapshotResponse
     summary: TopologySummary
     node_detail: NodeDetail
     edge_detail: EdgeDetail
