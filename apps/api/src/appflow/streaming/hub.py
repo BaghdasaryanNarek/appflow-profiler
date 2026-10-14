@@ -86,6 +86,7 @@ class StreamHub:
         self._last_snapshot_time: float = 0.0
         self._last_heartbeat_time: float = 0.0
         self._last_scenario: ScenarioInfo | None = None
+        self._global_seq: int = 0
 
         self._prev_graph: TopologyGraph = TopologyGraph()
 
@@ -93,6 +94,22 @@ class StreamHub:
     def active_client_count(self) -> int:
         """Count of actively connected WebSocket clients."""
         return len(self._clients)
+
+    @property
+    def global_seq(self) -> int:
+        """Monotonic global sequence number of aggregated ticks."""
+        return self._global_seq
+
+    @property
+    def active_scenario(self) -> ScenarioInfo | None:
+        """Active simulation scenario, if any."""
+        return getattr(self.source, "active_scenario", self._last_scenario)
+
+    @property
+    def active_scenario_name(self) -> str | None:
+        """Name of the currently active simulation scenario, if any."""
+        active = self.active_scenario
+        return active.name if active else None
 
     @property
     def tick_age_ms(self) -> int | None:
@@ -112,15 +129,12 @@ class StreamHub:
     def get_meta(self) -> MetaResponse:
         """Produce engine capability declaration for client negotiation."""
         mode = SourceMode.DEMO if self.settings.is_simulated else SourceMode.LIVE
-        caps = getattr(
-            self.source,
-            "capabilities",
-            Capabilities(
-                per_process_io=False,
-                connection_owner=False,
-                ai_advisor=self.settings.ai_enabled,
-                scenarios=self.settings.is_simulated,
-            ),
+        source_caps = getattr(self.source, "capabilities", None)
+        caps = Capabilities(
+            per_process_io=source_caps.per_process_io if source_caps else False,
+            connection_owner=source_caps.connection_owner if source_caps else False,
+            ai_advisor=True,
+            scenarios=self.settings.is_simulated,
         )
         return MetaResponse(
             version=__version__,
@@ -308,6 +322,15 @@ class StreamHub:
             with contextlib.suppress(asyncio.QueueFull):
                 session.queue.put_nowait(snapshot_msg)
 
+    async def broadcast_scenario(self, scenario: ScenarioInfo | None) -> None:
+        """Immediately broadcast scenario transition to all active WebSocket clients."""
+        self._last_scenario = scenario
+        scen_msg = ServerScenarioMessage(payload=ScenarioPayload(active=scenario))
+        async with self._lock:
+            for s in self._clients.values():
+                if not s.is_paused:
+                    self._enqueue_client_message(s, scen_msg)
+
     async def _tick_loop(self) -> None:
         """Single tick task sampling telemetry, computing diffs and broadcasting."""
         interval_s = max(0.05, self.settings.tick_ms / 1000.0)
@@ -323,18 +346,12 @@ class StreamHub:
 
                 # 2. Aggregate into TopologyGraph
                 curr_graph, health_events = self.aggregator.process_sample(raw_sample)
+                self._global_seq += 1
 
                 # 3. Check for simulation scenario transitions
                 active_scenario = getattr(self.source, "active_scenario", None)
                 if active_scenario != self._last_scenario:
-                    self._last_scenario = active_scenario
-                    scen_msg = ServerScenarioMessage(
-                        payload=ScenarioPayload(active=active_scenario)
-                    )
-                    async with self._lock:
-                        for s in self._clients.values():
-                            if not s.is_paused:
-                                self._enqueue_client_message(s, scen_msg)
+                    await self.broadcast_scenario(active_scenario)
 
                 # 4. Broadcast health transition events
                 if health_events:

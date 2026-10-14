@@ -34,6 +34,7 @@ def problem_response(
     detail: str | None = None,
     instance: str | None = None,
     title: str | None = None,
+    headers: dict[str, str] | None = None,
     **extensions: object,
 ) -> JSONResponse:
     """Build a problem+json response; ``title`` defaults to the standard HTTP reason phrase."""
@@ -50,13 +51,20 @@ def problem_response(
         status_code=status,
         content=jsonable_encoder(problem, exclude_none=True),
         media_type=PROBLEM_JSON,
+        headers=headers,
     )
 
 
 async def _http_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     assert isinstance(exc, StarletteHTTPException)
     detail = exc.detail if isinstance(exc.detail, str) else None
-    return problem_response(exc.status_code, detail=detail, instance=request.url.path)
+    headers = dict(exc.headers) if exc.headers else None
+    return problem_response(
+        exc.status_code,
+        detail=detail,
+        instance=request.url.path,
+        headers=headers,
+    )
 
 
 async def _validation_exception_handler(request: Request, exc: Exception) -> JSONResponse:
