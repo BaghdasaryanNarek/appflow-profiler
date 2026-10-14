@@ -139,7 +139,6 @@ def build_digest(
         KeyError: If scope != 'global' and the specified node_id does not exist in the graph.
     """
     all_node_map = {n.id: n for n in graph.nodes}
-    known_ids = sorted(all_node_map.keys())
 
     if scope != "global" and scope not in all_node_map:
         raise KeyError(f"Node '{scope}' not found in topology graph")
@@ -227,22 +226,26 @@ def build_digest(
     digest_nodes.sort(key=_node_priority_score, reverse=True)
     digest_edges.sort(key=_edge_priority_score, reverse=True)
 
-    curr_k = min(top_k, max(len(digest_nodes), len(digest_edges), 1))
-    selected_nodes = digest_nodes[:curr_k]
-    selected_edges = digest_edges[:curr_k]
-
-    # Enforce <= 6 KB ceiling by pruning k if necessary
-    _, raw_bytes = _serialize_for_hash(
-        scope, focus, active_scenario, totals, selected_nodes, selected_edges, known_ids
-    )
-
-    while len(raw_bytes) > MAX_DIGEST_BYTES and curr_k > 1:
-        curr_k -= 1
-        selected_nodes = digest_nodes[:curr_k]
-        selected_edges = digest_edges[:curr_k]
-        _, raw_bytes = _serialize_for_hash(
-            scope, focus, active_scenario, totals, selected_nodes, selected_edges, known_ids
+    def _candidate_slice(
+        k: int,
+    ) -> tuple[list[DigestNode], list[DigestEdge], list[str], bytes]:
+        nodes_k = digest_nodes[:k]
+        edges_k = digest_edges[:k]
+        node_ids_k = sorted(
+            {n.id for n in nodes_k} | {e.source for e in edges_k} | {e.target for e in edges_k}
         )
+        _, raw = _serialize_for_hash(
+            scope, focus, active_scenario, totals, nodes_k, edges_k, node_ids_k
+        )
+        return nodes_k, edges_k, node_ids_k, raw
+
+    curr_k = min(top_k, max(len(digest_nodes), len(digest_edges), 1))
+    selected_nodes, selected_edges, digest_node_ids, raw_bytes = _candidate_slice(curr_k)
+
+    # Enforce <= 6 KB ceiling factoring in digest_hash and json formatting overhead
+    while len(raw_bytes) > (MAX_DIGEST_BYTES - 800) and curr_k > 1:
+        curr_k -= 1
+        selected_nodes, selected_edges, digest_node_ids, raw_bytes = _candidate_slice(curr_k)
 
     digest_hash = hashlib.sha256(raw_bytes).hexdigest()
 
@@ -253,6 +256,6 @@ def build_digest(
         totals=totals,
         hot_nodes=selected_nodes,
         hot_edges=selected_edges,
-        known_node_ids=known_ids,
+        known_node_ids=digest_node_ids,
         digest_hash=digest_hash,
     )

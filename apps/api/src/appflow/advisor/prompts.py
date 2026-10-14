@@ -19,7 +19,7 @@ present in the topology digest (RPS, p99 latency, error rate, saturation, retry 
 explicitly note it under 'caveats'.
 4. Domain Focus: Use strict DevOps, SRE, and performance profiling terminology (e.g., capacity \
 planning, connection pooling, jittered exponential backoff, cache-aside, deadline propagation, \
-RPC timeouts, circuit breakers). Zero mentions of cybersecurity or defensive operations.
+RPC timeouts, circuit breakers). Focus strictly on profiling and operational reliability.
 5. Structured Output: Produce an OptimizationReport adhering strictly to the required JSON schema.
 """
 
