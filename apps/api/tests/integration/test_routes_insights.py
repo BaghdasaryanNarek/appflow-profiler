@@ -173,12 +173,11 @@ def test_analyze_rate_limiting_exceeded(client: TestClient) -> None:
 def test_analyze_service_unavailable_without_graph(client: TestClient) -> None:
     """Verify 503 response if the aggregator has not yet ingested topology ticks."""
     app = cast("FastAPI", client.app)
-    original_graph = app.state.aggregator._latest_graph
-    try:
-        app.state.aggregator._latest_graph = None
+    with patch.object(
+        type(app.state.aggregator), "latest_graph", new_callable=PropertyMock
+    ) as mock_graph:
+        mock_graph.return_value = None
         res = client.post("/api/v1/insights/analyze", json={"scope": "global"})
         assert res.status_code == 503
         assert res.headers["content-type"] == PROBLEM_JSON
         assert "not yet initialized" in res.json()["detail"]
-    finally:
-        app.state.aggregator._latest_graph = original_graph

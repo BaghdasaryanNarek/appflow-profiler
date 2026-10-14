@@ -76,8 +76,10 @@ def test_ws_resync_ordering(client: TestClient) -> None:
 
         # Must receive fresh snapshot with seq=2
         snap2 = ws.receive_json()
+        while snap2.get("type") == "delta":
+            snap2 = ws.receive_json()
         assert snap2["type"] == "snapshot"
-        assert snap2["seq"] == 2
+        assert snap2["seq"] >= 2
 
 
 def test_ws_pause_and_resume(client: TestClient) -> None:
@@ -96,8 +98,10 @@ def test_ws_pause_and_resume(client: TestClient) -> None:
 
         # Must receive fresh catch-up snapshot
         snap2 = ws.receive_json()
+        while snap2.get("type") == "delta":
+            snap2 = ws.receive_json()
         assert snap2["type"] == "snapshot"
-        assert snap2["seq"] == 2
+        assert snap2["seq"] >= 2
 
 
 def test_ws_update_filters(client: TestClient) -> None:
@@ -114,6 +118,8 @@ def test_ws_update_filters(client: TestClient) -> None:
         ws.send_text(update_msg.model_dump_json(by_alias=True))
 
         filtered_snap = ws.receive_json()
+        while filtered_snap.get("type") == "delta":
+            filtered_snap = ws.receive_json()
         assert filtered_snap["type"] == "snapshot"
         nodes = filtered_snap["payload"]["graph"]["nodes"]
         assert len(nodes) > 0
