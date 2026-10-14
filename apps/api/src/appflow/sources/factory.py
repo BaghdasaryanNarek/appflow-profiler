@@ -1,7 +1,5 @@
 """Source factory with strict lazy imports to prevent loading psutil in demo mode."""
 
-from typing import cast
-
 from appflow.config import Environment, Settings
 from appflow.sources.base import TopologySource
 
@@ -18,19 +16,14 @@ def build_source(settings: Settings) -> TopologySource:
         return PsutilSource()
 
     if settings.env in (Environment.DEMO, Environment.TEST):
-        try:
-            from appflow.simulation.source import (  # type: ignore[import-not-found]
-                SimulationSource,
-            )
+        from appflow.simulation.source import SimulationSource
 
-            return cast(
-                "TopologySource",
-                SimulationSource(seed=settings.sim_seed, scale=settings.sim_scale),
-            )
-        except ImportError:
-            raise RuntimeError(
-                f"Simulation mode requested (ENV={settings.env.value}), but SimulationSource "
-                "is not yet available (scheduled for implementation in Phase 5)."
-            ) from None
+        dt = float(settings.tick_ms) / 1000.0
+        return SimulationSource(
+            seed=settings.sim_seed,
+            scale=settings.sim_scale,
+            autoplay=settings.sim_autoplay,
+            dt=dt,
+        )
 
     raise ValueError(f"Unsupported environment mode: {settings.env}")
