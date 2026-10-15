@@ -224,6 +224,7 @@ export function NodeDetailSheet() {
     <Sheet open={isOpen} onOpenChange={setDetailSheetOpen}>
       <SheetContent
         side="right"
+        data-testid="node-detail-sheet"
         onCloseAutoFocus={handleCloseAutoFocus}
         style={{ width: `${String(sheetWidth)}px`, maxWidth: "100vw" }}
         className="flex flex-col overflow-hidden border-l border-[var(--border)] bg-[var(--surface-solid)] p-0 shadow-2xl"

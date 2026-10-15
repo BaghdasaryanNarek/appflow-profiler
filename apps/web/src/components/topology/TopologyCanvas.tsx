@@ -181,6 +181,9 @@ function TopologyCanvasInner() {
       .computeLayout(layoutNodes, layoutEdges, { direction: "RIGHT" }, fingerprint)
       .then((newPos) => {
         setNodePositions(newPos);
+      })
+      .catch(() => {
+        // Safe swallow if worker bridge was terminated on unmount
       });
   }, [displayNodes, displayEdges, shouldCollapseLod, layoutLocked, setNodePositions]);
 
@@ -220,6 +223,9 @@ function TopologyCanvasInner() {
             .then((newPos) => {
               setNodePositions(newPos);
               void fitView({ padding: 0.2, duration: 400 });
+            })
+            .catch(() => {
+              // Safe swallow if worker bridge was terminated
             });
         }
         break;
@@ -449,10 +455,14 @@ function TopologyCanvasInner() {
   const onNodesChange = React.useCallback(
     (changes: NodeChange<FlowNode<FlowNodeData>>[]) => {
       if (layoutLocked) return;
+      const updates: Record<string, { x: number; y: number }> = {};
       for (const change of changes) {
-        if (change.type === "position" && change.position) {
-          setNodePositions({ [change.id]: change.position });
+        if (change.type === "position" && change.position && change.dragging) {
+          updates[change.id] = change.position;
         }
+      }
+      if (Object.keys(updates).length > 0) {
+        setNodePositions(updates);
       }
     },
     [layoutLocked, setNodePositions],
@@ -535,6 +545,9 @@ function TopologyCanvasInner() {
                     .then((newPos) => {
                       setNodePositions(newPos);
                       void fitView({ padding: 0.2, duration: 400 });
+                    })
+                    .catch(() => {
+                      // Safe swallow if worker bridge was terminated
                     });
                 }
               }}

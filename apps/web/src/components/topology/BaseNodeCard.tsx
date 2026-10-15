@@ -42,25 +42,37 @@ export const BaseNodeCard = React.memo(function BaseNodeCard({
 }: BaseNodeCardProps) {
   const selectNode = useUiStore((s) => s.selectNode);
 
-  // Subscribe to history sparkline data for this specific node
-  const rpsHistory = useTopologyStore((s) => s.nodeHistory.get(id)?.rps.toArray());
+  // Stable reference to history buffer; toArray is only called when metrics change
+  const historyBuffers = useTopologyStore((s) => s.nodeHistory.get(id));
+  const currentRps = metrics.rps;
+  const rpsHistory = React.useMemo(() => {
+    if (currentRps < 0) return [];
+    return historyBuffers?.rps.toArray();
+  }, [historyBuffers, currentRps]);
 
-  // Incident upstream and downstream counts for accessible contract (§3.5)
-  const upCount = useTopologyStore((s) => {
-    let count = 0;
-    for (const edge of s.edges.values()) {
-      if (edge.target === id) count++;
-    }
-    return count;
-  });
+  // Adjacency counts using adjacency map in topologyStore (O(1) Set lookup)
+  const incidentEdgeIds = useTopologyStore((s) => s.adjacency.get(id));
+  const edgesMap = useTopologyStore((s) => s.edges);
 
-  const downCount = useTopologyStore((s) => {
-    let count = 0;
-    for (const edge of s.edges.values()) {
-      if (edge.source === id) count++;
+  const { upCount, downCount } = React.useMemo(() => {
+    let up = 0;
+    let down = 0;
+    if (incidentEdgeIds) {
+      for (const edgeId of incidentEdgeIds) {
+        const edge = edgesMap.get(edgeId);
+        if (edge) {
+          if (edge.target === id) up++;
+          if (edge.source === id) down++;
+        }
+      }
+    } else {
+      for (const edge of edgesMap.values()) {
+        if (edge.target === id) up++;
+        if (edge.source === id) down++;
+      }
     }
-    return count;
-  });
+    return { upCount: up, downCount: down };
+  }, [id, incidentEdgeIds, edgesMap]);
 
   const healthConfig = React.useMemo(() => {
     switch (health) {

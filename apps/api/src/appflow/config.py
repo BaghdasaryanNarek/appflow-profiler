@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     snapshot_every_s: int = Field(default=30, ge=1, le=3600)
     max_ws_clients: int = Field(default=50, ge=1, le=10_000)
     allowed_origins: Annotated[list[str], NoDecode] = Field(
-        default_factory=lambda: ["http://localhost:3000"]
+        default_factory=lambda: ["http://localhost:3000", "http://127.0.0.1:3000"]
     )
 
     sim_seed: int = 42

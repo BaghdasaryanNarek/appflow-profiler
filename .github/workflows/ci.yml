@@ -135,5 +135,76 @@ jobs:
       - name: Build Next.js application
         env:
           NEXT_PUBLIC_API_URL: "http://localhost:8000"
-          NEXT_PUBLIC_WS_URL: "ws://localhost:8000/ws"
+          NEXT_PUBLIC_WS_URL: "ws://localhost:8000/ws/v1/topology"
         run: pnpm --dir apps/web build
+
+  e2e:
+    name: End-to-End & Playwright Journeys
+    runs-on: ubuntu-latest
+    needs: [api, web]
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "apps/api/uv.lock"
+
+      - name: Install Python 3.12
+        run: uv python install 3.12
+
+      - name: Install backend dependencies
+        run: uv sync --frozen --all-extras
+        working-directory: apps/api
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        run: pnpm --dir apps/web install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --dir apps/web exec playwright install --with-deps chromium
+
+      - name: Build Next.js application
+        env:
+          NEXT_PUBLIC_API_URL: "http://127.0.0.1:8000"
+          NEXT_PUBLIC_WS_URL: "ws://127.0.0.1:8000/ws/v1/topology"
+        run: pnpm --dir apps/web build
+
+      - name: Start Simulated Backend Daemon
+        run: |
+          ENV=test APPFLOW_ENV=test uv run --directory apps/api uvicorn appflow.main:create_app --factory --host 127.0.0.1 --port 8000 &
+          for i in {1..30}; do
+            if curl -s http://127.0.0.1:8000/healthz | grep -q "ok"; then
+              echo "Simulated backend daemon is ready!"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Run Playwright E2E Suite
+        env:
+          CI: "true"
+          BASE_URL: "http://127.0.0.1:3000"
+        run: pnpm --dir apps/web e2e
+
+      - name: Upload Playwright Test Report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 14

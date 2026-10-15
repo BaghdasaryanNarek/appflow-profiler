@@ -35,7 +35,7 @@ web-check: ## Lint, format-check, type-check, test and build the frontend
 	$(PNPM) --dir $(WEB_DIR) format:check
 	$(PNPM) --dir $(WEB_DIR) typecheck
 	$(PNPM) --dir $(WEB_DIR) test
-	NEXT_PUBLIC_API_URL="http://localhost:8000" NEXT_PUBLIC_WS_URL="ws://localhost:8000/ws" $(PNPM) --dir $(WEB_DIR) build
+	NEXT_PUBLIC_API_URL="http://localhost:8000" NEXT_PUBLIC_WS_URL="ws://localhost:8000/ws/v1/topology" $(PNPM) --dir $(WEB_DIR) build
 
 dev: ## Run backend and frontend in development mode
 	@echo "dev: not yet implemented"

@@ -8,6 +8,15 @@ const ROUTES = [
   { path: "/about", name: "About & Architecture" },
 ];
 
+test.beforeEach(({ page }) => {
+  page.on("console", (msg) => {
+    console.log(`[BROWSER ${msg.type().toUpperCase()}] ${msg.text()}`);
+  });
+  page.on("pageerror", (err) => {
+    console.log(`[BROWSER UNHANDLED ERROR] ${err.message}\n${err.stack ?? ""}`);
+  });
+});
+
 test.describe("WCAG 2.2 AA Automated Accessibility Scans (§2, §3.5)", () => {
   for (const { path, name } of ROUTES) {
     test(`audits ${path} (${name}) with zero serious or critical violations`, async ({ page }) => {

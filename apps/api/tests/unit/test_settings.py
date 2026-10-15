@@ -11,7 +11,7 @@ def test_defaults_are_live_mode(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = Settings(_env_file=None)
     assert settings.env is Environment.LIVE
     assert settings.tick_ms == 1000
-    assert settings.allowed_origins == ["http://localhost:3000"]
+    assert settings.allowed_origins == ["http://localhost:3000", "http://127.0.0.1:3000"]
     assert settings.gemini_model == "gemini-3.8-flash"
     assert not settings.is_simulated
     assert not settings.ai_enabled
