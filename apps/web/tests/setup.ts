@@ -20,6 +20,20 @@ vi.mock("next/link", () => ({
   },
 }));
 
+// Mock next/navigation for App Router hooks in JSDOM
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  }),
+  usePathname: () => "/topology",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 // Polyfill window.matchMedia for jsdom
 if (typeof window !== "undefined") {
   Object.defineProperty(window, "matchMedia", {
