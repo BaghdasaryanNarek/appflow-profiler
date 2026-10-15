@@ -65,6 +65,16 @@ export function formatPercent(ratio: number): string {
 }
 
 /**
+ * Format standard numeric values with locale-aware thousands separators.
+ */
+export function formatNumber(n: number): string {
+  if (!Number.isFinite(n)) {
+    return "0";
+  }
+  return new Intl.NumberFormat("en-US").format(n);
+}
+
+/**
  * Compact numeric formatter for fleet-wide totals (e.g. 1.2k, 4.5M).
  */
 export function formatCompactNumber(n: number): string {

@@ -34,6 +34,11 @@ export interface UiStoreState {
   connectionStatus: ConnectionStatus;
   reconnectAttempt: number;
   lastError: string | null;
+  layoutLocked: boolean;
+  canvasActionTrigger: {
+    type: "fit-view" | "zoom-in" | "zoom-out" | "relayout";
+    timestamp: number;
+  } | null;
 
   // Health Announcements (LiveAnnouncer)
   announcements: UiAnnouncement[];
@@ -58,6 +63,9 @@ export interface UiStoreState {
   setConnectionStatus: (status: ConnectionStatus) => void;
   setReconnectAttempt: (attempt: number) => void;
   setLastError: (error: string | null) => void;
+  setLayoutLocked: (locked: boolean) => void;
+  toggleLayoutLocked: () => void;
+  triggerCanvasAction: (type: "fit-view" | "zoom-in" | "zoom-out" | "relayout") => void;
 
   queueHealthEvent: (payload: HealthEventPayload) => void;
   clearAnnouncements: () => void;
@@ -79,6 +87,8 @@ export const useUiStore = create<UiStoreState>((set) => ({
   connectionStatus: "idle",
   reconnectAttempt: 0,
   lastError: null,
+  layoutLocked: false,
+  canvasActionTrigger: null,
 
   announcements: [],
   latestAnnouncement: null,
@@ -155,6 +165,15 @@ export const useUiStore = create<UiStoreState>((set) => ({
   },
   setLastError: (lastError) => {
     set({ lastError });
+  },
+  setLayoutLocked: (layoutLocked) => {
+    set({ layoutLocked });
+  },
+  toggleLayoutLocked: () => {
+    set((state) => ({ layoutLocked: !state.layoutLocked }));
+  },
+  triggerCanvasAction: (type) => {
+    set({ canvasActionTrigger: { type, timestamp: Date.now() } });
   },
 
   queueHealthEvent: (payload) => {

@@ -2,6 +2,7 @@
  * Memoized Zustand selectors and React hooks with shallow equality (§3.7).
  */
 
+import * as React from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { Edge, NeighbourRef, Node } from "@/types/contracts.gen";
 import { useTopologyStore, type TopologyStoreState } from "./topology-store";
@@ -245,21 +246,20 @@ export function selectSelectedEntity(
  * Hook subscribing to filtered topology state, memoized by filters and topology version (§3.7).
  */
 export function useFilteredTopology(): FilteredTopology {
+  const nodesMap = useTopologyStore((s) => s.nodes);
+  const edgesMap = useTopologyStore((s) => s.edges);
+
   const kinds = useUiStore((s) => s.kinds);
   const minRps = useUiStore((s) => s.minRps);
   const groupId = useUiStore((s) => s.groupId);
   const searchQuery = useUiStore((s) => s.searchQuery);
 
-  return useTopologyStore(
-    useShallow((topology) => {
-      return selectFilteredTopology(topology, {
-        kinds,
-        minRps,
-        groupId,
-        searchQuery,
-      } as UiStoreState);
-    }),
-  );
+  return React.useMemo(() => {
+    return selectFilteredTopology(
+      { nodes: nodesMap, edges: edgesMap } as unknown as TopologyStoreState,
+      { kinds, minRps, groupId, searchQuery } as UiStoreState,
+    );
+  }, [nodesMap, edgesMap, kinds, minRps, groupId, searchQuery]);
 }
 
 /**
@@ -275,13 +275,12 @@ export function useKpiSummary(): KpiSummaryData {
 export function useSelectedEntity(): SelectedEntityData {
   const selectedNodeId = useUiStore((s) => s.selectedNodeId);
   const selectedEdgeId = useUiStore((s) => s.selectedEdgeId);
+  const topology = useTopologyStore((s) => s);
 
-  return useTopologyStore(
-    useShallow((topology) => {
-      return selectSelectedEntity(topology, {
-        selectedNodeId,
-        selectedEdgeId,
-      } as UiStoreState);
-    }),
-  );
+  return React.useMemo(() => {
+    return selectSelectedEntity(topology, {
+      selectedNodeId,
+      selectedEdgeId,
+    } as UiStoreState);
+  }, [topology, selectedNodeId, selectedEdgeId]);
 }

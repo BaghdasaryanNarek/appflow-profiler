@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
 
 @theme {
   --color-bg: oklch(0.14 0.005 260);
@@ -133,4 +134,64 @@ h6 {
 ::view-transition-new(root) {
   animation-duration: 180ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* React Flow styling overrides */
+.react-flow {
+  background-color: var(--bg);
+}
+
+.react-flow__controls {
+  border: 1px solid var(--border);
+  background-color: var(--surface-solid);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.react-flow__controls-button {
+  background-color: var(--surface-solid);
+  border-bottom: 1px solid var(--border);
+  color: var(--fg);
+  fill: var(--fg);
+}
+
+.react-flow__controls-button:hover {
+  background-color: var(--surface);
+  color: var(--accent);
+  fill: var(--accent);
+}
+
+.react-flow__minimap {
+  background-color: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.react-flow__minimap-mask {
+  fill: oklch(0.14 0.005 260 / 0.7);
+}
+
+.react-flow__minimap-node {
+  fill: var(--fg-muted);
+}
+
+/* Traffic edge dash animation */
+@keyframes dash-flow {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.traffic-flow-animated {
+  animation: dash-flow 1.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .traffic-flow-animated {
+    animation: none !important;
+  }
 }

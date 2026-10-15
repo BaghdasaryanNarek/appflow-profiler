@@ -71,11 +71,13 @@ export function TopBar({
             size="sm"
             onClick={onOpenCommandMenu}
             className="hidden h-8 items-center gap-2 border-[var(--border)] bg-[var(--surface)] px-2.5 text-xs font-normal text-[var(--fg-muted)] hover:text-[var(--fg)] sm:inline-flex"
-            aria-label="Open command palette"
           >
-            <Search className="h-3.5 w-3.5" />
+            <Search className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Search or command…</span>
-            <kbd className="pointer-events-none inline-flex h-4 items-center gap-0.5 rounded border border-[var(--border)] bg-[var(--surface-solid)] px-1.5 font-mono text-[10px] font-medium text-[var(--fg-muted)] select-none">
+            <kbd
+              aria-hidden="true"
+              className="pointer-events-none inline-flex h-4 items-center gap-0.5 rounded border border-[var(--border)] bg-[var(--surface-solid)] px-1.5 font-mono text-[10px] font-medium text-[var(--fg-muted)] select-none"
+            >
               ⌘K
             </kbd>
           </Button>
