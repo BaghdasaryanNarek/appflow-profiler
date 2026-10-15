@@ -26,6 +26,7 @@ import { CanvasToolbar } from "./CanvasToolbar";
 import { CanvasControls } from "./CanvasControls";
 import { Legend } from "./Legend";
 import { TopologyTableView } from "./TopologyTableView";
+import { NodeDetailSheet } from "@/components/details/NodeDetailSheet";
 import { VisuallyHidden } from "@/components/a11y/VisuallyHidden";
 import type { Node as AppFlowNode, HealthStatus } from "@/types/contracts.gen";
 import type { FlowNodeData, FlowEdgeData, GroupNodeData } from "./types";
@@ -400,89 +401,92 @@ function TopologyCanvasInner() {
     [layoutLocked, setNodePositions],
   );
 
-  if (viewMode === "table") {
-    return (
-      <div className="relative flex h-full w-full flex-col p-4">
-        <CanvasToolbar className="mb-3 shrink-0" />
-        <div className="flex-1 overflow-hidden">
-          <TopologyTableView />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div
-      role="region"
-      aria-label="Interactive Topology Map"
-      aria-describedby="canvas-keyboard-instructions"
-      className="relative h-full w-full overflow-hidden bg-[var(--bg)] outline-none"
-    >
-      <VisuallyHidden id="canvas-keyboard-instructions">
-        Interactive topology map. Use Tab or Shift+Tab to cycle through nodes by severity. Use Arrow
-        keys to navigate between spatially adjacent nodes. Press Enter to view node details. Press
-        Escape to clear selection. Press 0 to fit view. Press + or - to zoom. Press T to switch to
-        accessible table presentation. Press / to filter nodes.
-      </VisuallyHidden>
+    <>
+      {viewMode === "table" ? (
+        <div className="relative flex h-full w-full flex-col p-4">
+          <CanvasToolbar className="mb-3 shrink-0" />
+          <div className="flex-1 overflow-hidden">
+            <TopologyTableView />
+          </div>
+        </div>
+      ) : (
+        <div
+          role="region"
+          aria-label="Interactive Topology Map"
+          aria-describedby="canvas-keyboard-instructions"
+          className="relative h-full w-full overflow-hidden bg-[var(--bg)] outline-none"
+        >
+          <VisuallyHidden id="canvas-keyboard-instructions">
+            Interactive topology map. Use Tab or Shift+Tab to cycle through nodes by severity. Use
+            Arrow keys to navigate between spatially adjacent nodes. Press Enter to view node
+            details. Press Escape to clear selection. Press 0 to fit view. Press + or - to zoom.
+            Press T to switch to accessible table presentation. Press / to filter nodes.
+          </VisuallyHidden>
 
-      {/* Floating Canvas Toolbar */}
-      <div className="pointer-events-none absolute top-4 right-4 left-4 z-10 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <CanvasToolbar className="w-full sm:w-auto" />
-      </div>
+          {/* Floating Canvas Toolbar */}
+          <div className="pointer-events-none absolute top-4 right-4 left-4 z-10 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <CanvasToolbar className="w-full sm:w-auto" />
+          </div>
 
-      {/* React Flow Canvas Island */}
-      <ReactFlow<FlowNode<FlowNodeData>, FlowEdge<FlowEdgeData>>
-        nodes={flowNodes}
-        edges={flowEdges}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        onNodesChange={onNodesChange}
-        onlyRenderVisibleElements={true}
-        nodesFocusable={true}
-        edgesFocusable={true}
-        defaultViewport={{ x: 80, y: 80, zoom: 0.9 }}
-        minZoom={0.2}
-        maxZoom={2.5}
-        fitViewOptions={{ padding: 0.2 }}
-        proOptions={{ hideAttribution: true }}
-      >
-        <Background color="var(--border-strong)" gap={24} size={1.2} />
-        <MiniMap
-          nodeStrokeWidth={3}
-          zoomable
-          pannable
-          className="!right-4 !bottom-4 !m-0 overflow-hidden rounded-lg !border !border-[var(--border)] !bg-[var(--surface-solid)]"
-        />
-      </ReactFlow>
+          {/* React Flow Canvas Island */}
+          <ReactFlow<FlowNode<FlowNodeData>, FlowEdge<FlowEdgeData>>
+            nodes={flowNodes}
+            edges={flowEdges}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            onNodesChange={onNodesChange}
+            onlyRenderVisibleElements={true}
+            nodesFocusable={true}
+            edgesFocusable={true}
+            defaultViewport={{ x: 80, y: 80, zoom: 0.9 }}
+            minZoom={0.2}
+            maxZoom={2.5}
+            fitViewOptions={{ padding: 0.2 }}
+            proOptions={{ hideAttribution: true }}
+          >
+            <Background color="var(--border-strong)" gap={24} size={1.2} />
+            <MiniMap
+              nodeStrokeWidth={3}
+              zoomable
+              pannable
+              className="!right-4 !bottom-4 !m-0 overflow-hidden rounded-lg !border !border-[var(--border)] !bg-[var(--surface-solid)]"
+            />
+          </ReactFlow>
 
-      {/* Floating Canvas Controls & Legend */}
-      <div className="pointer-events-none absolute bottom-4 left-4 z-10 flex flex-col gap-2">
-        <Legend />
-        <CanvasControls
-          onRelayout={() => {
-            const bridge = workerBridgeRef.current;
-            if (bridge) {
-              const layoutNodes = displayNodes.map((n) => ({
-                id: n.id,
-                kind: n.kind,
-                parentId: n.group_id ?? undefined,
-              }));
-              const layoutEdges = displayEdges.map((e) => ({
-                id: e.id,
-                source: e.source,
-                target: e.target,
-              }));
-              void bridge
-                .computeLayout(layoutNodes, layoutEdges, { direction: "RIGHT" })
-                .then((newPos) => {
-                  setNodePositions(newPos);
-                  void fitView({ padding: 0.2, duration: 400 });
-                });
-            }
-          }}
-        />
-      </div>
-    </div>
+          {/* Floating Canvas Controls & Legend */}
+          <div className="pointer-events-none absolute bottom-4 left-4 z-10 flex flex-col gap-2">
+            <Legend />
+            <CanvasControls
+              onRelayout={() => {
+                const bridge = workerBridgeRef.current;
+                if (bridge) {
+                  const layoutNodes = displayNodes.map((n) => ({
+                    id: n.id,
+                    kind: n.kind,
+                    parentId: n.group_id ?? undefined,
+                  }));
+                  const layoutEdges = displayEdges.map((e) => ({
+                    id: e.id,
+                    source: e.source,
+                    target: e.target,
+                  }));
+                  void bridge
+                    .computeLayout(layoutNodes, layoutEdges, { direction: "RIGHT" })
+                    .then((newPos) => {
+                      setNodePositions(newPos);
+                      void fitView({ padding: 0.2, duration: 400 });
+                    });
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Progressive Disclosure Detail Sheet (§3.3) */}
+      <NodeDetailSheet />
+    </>
   );
 }
 

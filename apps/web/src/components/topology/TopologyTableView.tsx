@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useFilteredTopology } from "@/store/selectors";
 import { useUiStore } from "@/store/ui-store";
-import { formatNumber, formatDuration } from "@/lib/format";
+import { formatNumber, formatLatencyMs } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Node } from "@/types/contracts.gen";
 
@@ -87,6 +87,8 @@ export const TopologyTableView = React.memo(function TopologyTableView({
                 return (
                   <tr
                     key={node.id}
+                    data-node-id={node.id}
+                    data-entity-id={node.id}
                     tabIndex={0}
                     role="button"
                     aria-label={`${node.kind} ${node.label}, health ${node.health}, ${formatNumber(node.metrics.rps)} requests per second`}
@@ -129,7 +131,7 @@ export const TopologyTableView = React.memo(function TopologyTableView({
                       {formatNumber(node.metrics.rps)}
                     </td>
                     <td className="px-4 py-2 text-right text-[var(--fg)] tabular-nums">
-                      {formatDuration(node.metrics.p99_ms)}
+                      {formatLatencyMs(node.metrics.p99_ms)}
                     </td>
                     <td className="px-4 py-2 text-right tabular-nums">
                       {node.metrics.error_rate > 0 ? (

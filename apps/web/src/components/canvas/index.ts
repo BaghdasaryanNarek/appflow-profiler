@@ -15,3 +15,4 @@ export * from "../topology/CanvasControls";
 export * from "../topology/CanvasToolbar";
 export * from "../topology/Legend";
 export * from "../topology/TopologyTableView";
+export * from "../details";

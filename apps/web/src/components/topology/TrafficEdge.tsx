@@ -9,9 +9,10 @@ import {
   type Edge,
 } from "@xyflow/react";
 import { cn } from "@/lib/utils";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, formatLatencyMs, formatPercent, formatRps } from "@/lib/format";
 import { useUiStore } from "@/store/ui-store";
 import type { HealthStatus } from "@/types/contracts.gen";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { FlowEdgeData } from "./types";
 
 export type TrafficEdgeProps = EdgeProps<Edge<FlowEdgeData, "traffic">>;
@@ -112,6 +113,7 @@ export const TrafficEdge = React.memo(function TrafficEdge({
         className="cursor-pointer focus:outline-none"
         tabIndex={0}
         role="button"
+        data-edge-id={id}
         aria-label={edgeDescription}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
@@ -133,7 +135,7 @@ export const TrafficEdge = React.memo(function TrafficEdge({
         }}
       />
 
-      {/* Edge RPS Pill Label */}
+      {/* Edge RPS Pill Label with Level 1 Tooltip */}
       {rps > 0 && (
         <EdgeLabelRenderer>
           <div
@@ -144,21 +146,43 @@ export const TrafficEdge = React.memo(function TrafficEdge({
             }}
             className="nodrag nopan"
           >
-            <button
-              type="button"
-              onClick={handleClick}
-              className={cn(
-                "flex items-center rounded-full border bg-[var(--surface-solid)]/90 px-2 py-0.5 font-mono text-[9px] font-semibold backdrop-blur-sm transition-transform hover:scale-110",
-                healthStyle.labelClass,
-                selected &&
-                  "border-[var(--accent)] text-[var(--accent)] ring-1 ring-[var(--accent)]",
-              )}
-              title={edgeDescription}
-              aria-label={edgeDescription}
-            >
-              <span>{formatNumber(rps)}</span>
-              <span className="ml-0.5 text-[7px] opacity-75">rps</span>
-            </button>
+            <TooltipProvider delayDuration={250}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    data-edge-id={id}
+                    onClick={handleClick}
+                    className={cn(
+                      "flex items-center rounded-full border bg-[var(--surface-solid)]/90 px-2 py-0.5 font-mono text-[9px] font-semibold backdrop-blur-sm transition-transform hover:scale-110 focus:ring-1 focus:ring-[var(--accent)] focus:outline-none",
+                      healthStyle.labelClass,
+                      selected &&
+                        "border-[var(--accent)] text-[var(--accent)] ring-1 ring-[var(--accent)]",
+                    )}
+                    aria-label={edgeDescription}
+                  >
+                    <span>{formatNumber(rps)}</span>
+                    <span className="ml-0.5 text-[7px] opacity-75">rps</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  className="flex items-center gap-3 font-mono text-[11px] tabular-nums"
+                >
+                  <span>
+                    <strong className="text-[var(--fg-muted)]">RPS:</strong> {formatRps(rps)}
+                  </span>
+                  <span>
+                    <strong className="text-[var(--fg-muted)]">p99:</strong>{" "}
+                    {formatLatencyMs(data?.metrics.p99_ms ?? 0)}
+                  </span>
+                  <span>
+                    <strong className="text-[var(--fg-muted)]">Err:</strong>{" "}
+                    {formatPercent(data?.metrics.error_rate ?? 0)}
+                  </span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </EdgeLabelRenderer>
       )}
