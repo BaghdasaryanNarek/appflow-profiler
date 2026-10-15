@@ -38,7 +38,7 @@ export const Legend = React.memo(function Legend({ className }: LegendProps) {
           onClick={() => {
             setIsOpen(!isOpen);
           }}
-          className="flex h-5 w-5 items-center justify-center rounded text-[var(--fg-muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)]"
+          className="flex h-6 min-h-[24px] w-6 min-w-[24px] items-center justify-center rounded text-[var(--fg-muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)] focus-visible:ring-1 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
           aria-expanded={isOpen}
           aria-label={isOpen ? "Collapse legend" : "Expand legend"}
         >

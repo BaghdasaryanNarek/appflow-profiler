@@ -300,49 +300,96 @@ function TopologyCanvasInner() {
         return;
       }
 
-      // Tab / Shift+Tab cycling nodes in stable order (severity -> label)
-      if (e.key === "Tab" && flowNodes.length > 0) {
+      // Active node detection from focused DOM element or store selection (§3.5)
+      const focusedNodeEl = document.activeElement?.closest("[data-node-id]") as HTMLElement | null;
+      const activeNodeId = focusedNodeEl?.getAttribute("data-node-id") ?? selectedNodeId;
+
+      if (e.key === "Enter" && activeNodeId) {
         e.preventDefault();
-        const severityRank = (h: HealthStatus) =>
-          h === "critical" ? 0 : h === "degraded" ? 1 : h === "healthy" ? 2 : 3;
-
-        const sorted = [...flowNodes].sort((a, b) => {
-          const rankDiff = severityRank(a.data.health) - severityRank(b.data.health);
-          if (rankDiff !== 0) return rankDiff;
-          return a.data.label.localeCompare(b.data.label);
-        });
-
-        const currentIndex = sorted.findIndex((n) => n.id === selectedNodeId);
-        let nextIndex = 0;
-        if (currentIndex !== -1) {
-          nextIndex = e.shiftKey
-            ? (currentIndex - 1 + sorted.length) % sorted.length
-            : (currentIndex + 1) % sorted.length;
-        }
-
-        const targetNode = sorted[nextIndex];
-        if (targetNode) {
-          selectNode(targetNode.id);
-        }
+        selectNode(activeNodeId);
         return;
       }
 
-      // Directional spatial Arrow key traversal
+      // Tab / Shift+Tab cycling nodes in stable order (severity -> label)
+      if (e.key === "Tab" && flowNodes.length > 0) {
+        const activeEl = document.activeElement;
+        const isInCanvas =
+          Boolean(activeEl?.closest('[role="application"]')) ||
+          Boolean(activeEl?.closest("[data-node-id]"));
+
+        if (isInCanvas) {
+          e.preventDefault();
+          const severityRank = (h: HealthStatus) =>
+            h === "critical" ? 0 : h === "degraded" ? 1 : h === "healthy" ? 2 : 3;
+
+          const sorted = [...flowNodes].sort((a, b) => {
+            const rankDiff = severityRank(a.data.health) - severityRank(b.data.health);
+            if (rankDiff !== 0) return rankDiff;
+            return a.data.label.localeCompare(b.data.label);
+          });
+
+          const currentIndex = sorted.findIndex((n) => n.id === activeNodeId);
+          let nextIndex = 0;
+          if (currentIndex !== -1) {
+            nextIndex = e.shiftKey
+              ? (currentIndex - 1 + sorted.length) % sorted.length
+              : (currentIndex + 1) % sorted.length;
+          }
+
+          const targetNode = sorted[nextIndex];
+          if (targetNode) {
+            selectNode(targetNode.id);
+            requestAnimationFrame(() => {
+              document.querySelector<HTMLElement>(`[data-node-id="${targetNode.id}"]`)?.focus();
+            });
+          }
+          return;
+        }
+      }
+
+      // Directional keyboard neighbour traversal (§3.5)
       if (
         (e.key === "ArrowUp" ||
           e.key === "ArrowDown" ||
           e.key === "ArrowLeft" ||
           e.key === "ArrowRight") &&
-        selectedNodeId &&
-        flowNodes.length > 1
+        flowNodes.length > 0
       ) {
         e.preventDefault();
-        const currentNode = flowNodes.find((n) => n.id === selectedNodeId);
+
+        // If no active node yet, focus/select the first node
+        if (!activeNodeId) {
+          const first = flowNodes[0];
+          if (first) {
+            selectNode(first.id);
+            requestAnimationFrame(() => {
+              document.querySelector<HTMLElement>(`[data-node-id="${first.id}"]`)?.focus();
+            });
+          }
+          return;
+        }
+
+        const currentNode = flowNodes.find((n) => n.id === activeNodeId);
         if (!currentNode) return;
 
         const currentPos = currentNode.position;
-        let bestCandidate: FlowNode<FlowNodeData> | null = null;
-        let bestDistance = Number.POSITIVE_INFINITY;
+
+        // Connected neighbours (upstream or downstream connected edges)
+        const connectedNodeIds = new Set<string>();
+        for (const edge of displayEdges) {
+          if (edge.source === activeNodeId) {
+            connectedNodeIds.add(edge.target);
+          }
+          if (edge.target === activeNodeId) {
+            connectedNodeIds.add(edge.source);
+          }
+        }
+
+        let bestConnectedCandidate: FlowNode<FlowNodeData> | null = null;
+        let bestConnectedDist = Number.POSITIVE_INFINITY;
+
+        let bestSpatialCandidate: FlowNode<FlowNodeData> | null = null;
+        let bestSpatialDist = Number.POSITIVE_INFINITY;
 
         for (const candidate of flowNodes) {
           if (candidate.id === currentNode.id) continue;
@@ -350,27 +397,37 @@ function TopologyCanvasInner() {
           const dy = candidate.position.y - currentPos.y;
 
           let isDirectionValid = false;
-          if (e.key === "ArrowRight" && dx > 20) isDirectionValid = true;
-          if (e.key === "ArrowLeft" && dx < -20) isDirectionValid = true;
-          if (e.key === "ArrowDown" && dy > 20) isDirectionValid = true;
-          if (e.key === "ArrowUp" && dy < -20) isDirectionValid = true;
+          if (e.key === "ArrowRight" && dx > 10) isDirectionValid = true;
+          if (e.key === "ArrowLeft" && dx < -10) isDirectionValid = true;
+          if (e.key === "ArrowDown" && dy > 10) isDirectionValid = true;
+          if (e.key === "ArrowUp" && dy < -10) isDirectionValid = true;
 
           if (isDirectionValid) {
             const distance = Math.hypot(dx, dy);
-            if (distance < bestDistance) {
-              bestDistance = distance;
-              bestCandidate = candidate;
+            if (distance < bestSpatialDist) {
+              bestSpatialDist = distance;
+              bestSpatialCandidate = candidate;
+            }
+            if (connectedNodeIds.has(candidate.id) && distance < bestConnectedDist) {
+              bestConnectedDist = distance;
+              bestConnectedCandidate = candidate;
             }
           }
         }
 
-        if (bestCandidate) {
-          selectNode(bestCandidate.id);
+        // Priority 1: Connected neighbour in requested direction; Priority 2: Nearest spatial candidate
+        const chosenCandidate = bestConnectedCandidate ?? bestSpatialCandidate;
+        if (chosenCandidate) {
+          selectNode(chosenCandidate.id);
+          requestAnimationFrame(() => {
+            document.querySelector<HTMLElement>(`[data-node-id="${chosenCandidate.id}"]`)?.focus();
+          });
         }
       }
     },
     [
       flowNodes,
+      displayEdges,
       selectedNodeId,
       fitView,
       zoomIn,
@@ -412,9 +469,11 @@ function TopologyCanvasInner() {
         </div>
       ) : (
         <div
-          role="region"
+          role="application"
+          aria-roledescription="topology map"
           aria-label="Interactive Topology Map"
           aria-describedby="canvas-keyboard-instructions"
+          tabIndex={-1}
           className="relative h-full w-full overflow-hidden bg-[var(--bg)] outline-none"
         >
           <VisuallyHidden id="canvas-keyboard-instructions">

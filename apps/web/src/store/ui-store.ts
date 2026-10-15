@@ -71,6 +71,15 @@ export interface UiStoreState {
   clearAnnouncements: () => void;
 }
 
+let pendingHealthEvents: HealthEventPayload[] = [];
+let healthAnnouncementTimer: ReturnType<typeof setTimeout> | null = null;
+
+function formatHealthEventMessage(payload: HealthEventPayload): string {
+  const reasonsText =
+    payload.reasons && payload.reasons.length > 0 ? ` due to ${payload.reasons.join(", ")}` : "";
+  return `${payload.entity_id} became ${payload.to}${reasonsText}.`;
+}
+
 export const useUiStore = create<UiStoreState>((set) => ({
   selectedNodeId: null,
   selectedEdgeId: null,
@@ -178,36 +187,65 @@ export const useUiStore = create<UiStoreState>((set) => ({
 
   queueHealthEvent: (payload) => {
     const now = Date.now();
-    set((state) => {
-      // Throttle to at most one announcement every 5 seconds (5,000 ms) per §3.5
-      if (now - state.lastAnnouncedAt < 5000) {
-        return state;
-      }
+    const state = useUiStore.getState();
+    const elapsed = now - state.lastAnnouncedAt;
 
-      const reasonsText =
-        payload.reasons && payload.reasons.length > 0
-          ? ` due to ${payload.reasons.join(", ")}`
-          : "";
-      const message = `${payload.entity_id} became ${payload.to}${reasonsText}.`;
-
+    // If 5,000ms has elapsed since last announcement and no timer is running, announce immediately
+    if (elapsed >= 5000 && !healthAnnouncementTimer && pendingHealthEvents.length === 0) {
+      const message = formatHealthEventMessage(payload);
       const announcement: UiAnnouncement = {
         id: `${payload.entity_id}-${String(now)}`,
         message,
         timestamp: now,
       };
 
-      // Cap announcements buffer to max 50 items
-      const nextAnnouncements = [announcement, ...state.announcements].slice(0, 50);
-
-      return {
-        announcements: nextAnnouncements,
+      set((s) => ({
+        announcements: [announcement, ...s.announcements].slice(0, 50),
         latestAnnouncement: message,
         lastAnnouncedAt: now,
-      };
-    });
+      }));
+      return;
+    }
+
+    // Otherwise buffer into pending queue and schedule coalesced flush
+    pendingHealthEvents.push(payload);
+
+    if (!healthAnnouncementTimer) {
+      const remaining = Math.max(50, 5000 - elapsed);
+      healthAnnouncementTimer = setTimeout(() => {
+        healthAnnouncementTimer = null;
+        if (pendingHealthEvents.length === 0) return;
+
+        const batch = [...pendingHealthEvents];
+        pendingHealthEvents = [];
+
+        const message =
+          batch.length === 1 && batch[0]
+            ? formatHealthEventMessage(batch[0])
+            : batch.map(formatHealthEventMessage).join(" Also: ");
+
+        const flushTime = Date.now();
+        const announcement: UiAnnouncement = {
+          id: `batch-${String(flushTime)}`,
+          message,
+          timestamp: flushTime,
+        };
+
+        set((s) => ({
+          announcements: [announcement, ...s.announcements].slice(0, 50),
+          latestAnnouncement: message,
+          lastAnnouncedAt: flushTime,
+        }));
+      }, remaining);
+    }
   },
 
   clearAnnouncements: () => {
+    if (healthAnnouncementTimer) {
+      clearTimeout(healthAnnouncementTimer);
+      healthAnnouncementTimer = null;
+    }
+    pendingHealthEvents = [];
     set({
       announcements: [],
       latestAnnouncement: null,

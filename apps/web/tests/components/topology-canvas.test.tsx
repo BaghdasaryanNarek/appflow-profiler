@@ -377,7 +377,9 @@ describe("TopologyCanvas Component", () => {
 
   it("renders interactive topology canvas with zero a11y violations", async () => {
     const { container } = render(<TopologyCanvas />);
-    expect(screen.getByRole("region", { name: "Interactive Topology Map" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("application", { name: "Interactive Topology Map" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Frontend Web")).toBeInTheDocument();
 
     const results = await axe(container);

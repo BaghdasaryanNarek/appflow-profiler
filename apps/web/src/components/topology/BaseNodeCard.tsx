@@ -45,6 +45,23 @@ export const BaseNodeCard = React.memo(function BaseNodeCard({
   // Subscribe to history sparkline data for this specific node
   const rpsHistory = useTopologyStore((s) => s.nodeHistory.get(id)?.rps.toArray());
 
+  // Incident upstream and downstream counts for accessible contract (§3.5)
+  const upCount = useTopologyStore((s) => {
+    let count = 0;
+    for (const edge of s.edges.values()) {
+      if (edge.target === id) count++;
+    }
+    return count;
+  });
+
+  const downCount = useTopologyStore((s) => {
+    let count = 0;
+    for (const edge of s.edges.values()) {
+      if (edge.source === id) count++;
+    }
+    return count;
+  });
+
   const healthConfig = React.useMemo(() => {
     switch (health) {
       case "healthy":
@@ -89,10 +106,8 @@ export const BaseNodeCard = React.memo(function BaseNodeCard({
   const HealthIcon = healthConfig.icon;
 
   const accessibleLabel = React.useMemo(() => {
-    const errorPct = (metrics.error_rate * 100).toFixed(1);
-    const satPct = (metrics.saturation * 100).toFixed(0);
-    return `${kind} ${label}, health ${healthConfig.text}, ${metrics.rps.toLocaleString()} requests per second, p99 latency ${metrics.p99_ms.toFixed(0)} ms, errors ${errorPct} percent, saturation ${satPct} percent`;
-  }, [kind, label, healthConfig.text, metrics]);
+    return `${kind} ${label}, health ${health}, ${formatNumber(metrics.rps)} requests per second, p99 ${String(Math.round(metrics.p99_ms))} milliseconds, ${String(upCount)} upstream, ${String(downCount)} downstream`;
+  }, [kind, label, health, metrics.rps, metrics.p99_ms, upCount, downCount]);
 
   const handleClick = React.useCallback(
     (e: React.MouseEvent) => {
