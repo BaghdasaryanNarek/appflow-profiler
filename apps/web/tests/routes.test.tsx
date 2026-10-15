@@ -20,6 +20,28 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
 }));
 
+vi.mock("@/lib/api/client", () => ({
+  fetchTopologySummary: vi.fn(() =>
+    Promise.resolve({
+      node_count: 12,
+      edge_count: 18,
+      total_rps: 450,
+      global_p99_ms: 12.5,
+      global_error_rate: 0.01,
+      critical_count: 0,
+      degraded_count: 1,
+      mode: "simulation",
+    }),
+  ),
+  fetchSnapshots: vi.fn(() => Promise.resolve([])),
+  exportSnapshot: vi.fn(() => Promise.resolve()),
+  importSnapshot: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock("@/components/topology/TopologyCanvasWrapper", () => ({
+  TopologyCanvasWrapper: () => <div data-testid="topology-canvas-mock">Topology Canvas</div>,
+}));
+
 describe("Route Stubs & Pages", () => {
   it("RootPage redirects to /topology", () => {
     RootPage();
@@ -28,14 +50,23 @@ describe("Route Stubs & Pages", () => {
 
   describe("TopologyPage", () => {
     it("renders page title, KPI cards, and canvas island with zero a11y violations", async () => {
-      const { container } = render(<TopologyPage />);
+      const page = await TopologyPage();
+      let container: HTMLElement | undefined;
+      React.act(() => {
+        const res = render(page);
+        container = res.container;
+      });
       expect(
         screen.getByRole("heading", { level: 1, name: "Network Topology" }),
       ).toBeInTheDocument();
-      expect(screen.getByText("Active Nodes")).toBeInTheDocument();
-      expect(screen.getByText("Health Ratio")).toBeInTheDocument();
+      expect(screen.getByText("Fleet Entities")).toBeInTheDocument();
+      expect(screen.getAllByText("Throughput").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText("Status")).toBeInTheDocument();
       expect(screen.getByTestId("topology-canvas-island")).toBeInTheDocument();
 
+      if (!container) {
+        throw new Error("container is undefined");
+      }
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });

@@ -80,24 +80,34 @@ describe("Shell Components & Accessibility", () => {
 
   describe("Sidebar", () => {
     it("renders primary navigation links", async () => {
-      const { container } = render(<Sidebar />);
+      let renderResult: ReturnType<typeof render> | undefined;
+      act(() => {
+        renderResult = render(<Sidebar />);
+      });
       expect(screen.getByText("AppFlow")).toBeInTheDocument();
       expect(screen.getByText("Topology")).toBeInTheDocument();
       expect(screen.getByText("Processes")).toBeInTheDocument();
       expect(screen.getByText("Insights")).toBeInTheDocument();
       expect(screen.getByText("About")).toBeInTheDocument();
 
-      const results = await axe(container);
+      if (!renderResult) {
+        throw new Error("Sidebar render failed");
+      }
+      const results = await axe(renderResult.container);
       expect(results).toHaveNoViolations();
     });
 
     it("supports collapsible mode", () => {
       const onToggle = vi.fn();
-      render(<Sidebar collapsed={true} onToggleCollapse={onToggle} />);
+      act(() => {
+        render(<Sidebar collapsed={true} onToggleCollapse={onToggle} />);
+      });
       const expandBtn = screen.getByRole("button", {
         name: "Expand sidebar",
       });
-      fireEvent.click(expandBtn);
+      act(() => {
+        fireEvent.click(expandBtn);
+      });
       expect(onToggle).toHaveBeenCalledTimes(1);
     });
   });
@@ -105,19 +115,27 @@ describe("Shell Components & Accessibility", () => {
   describe("TopBar", () => {
     it("renders mode badge, connection status, and command button", async () => {
       const onCommand = vi.fn();
-      const { container } = render(
-        <TopBar onOpenCommandMenu={onCommand} mode="live" connectionStatus="connected" />,
-      );
+      let renderResult: ReturnType<typeof render> | undefined;
+      act(() => {
+        renderResult = render(
+          <TopBar onOpenCommandMenu={onCommand} mode="live" connectionStatus="connected" />,
+        );
+      });
       expect(screen.getByText("LIVE")).toBeInTheDocument();
       expect(screen.getByText("Connected")).toBeInTheDocument();
 
       const cmdBtn = screen.getByRole("button", {
-        name: "Open command palette",
+        name: /search or command/i,
       });
-      fireEvent.click(cmdBtn);
+      act(() => {
+        fireEvent.click(cmdBtn);
+      });
       expect(onCommand).toHaveBeenCalledTimes(1);
 
-      const results = await axe(container);
+      if (!renderResult) {
+        throw new Error("TopBar render failed");
+      }
+      const results = await axe(renderResult.container);
       expect(results).toHaveNoViolations();
     });
   });
@@ -125,40 +143,54 @@ describe("Shell Components & Accessibility", () => {
   describe("CommandMenu", () => {
     it("renders command palette when open with zero a11y violations", async () => {
       const onOpenChange = vi.fn();
-      const { container } = render(<CommandMenu open={true} onOpenChange={onOpenChange} />);
+      let renderResult: ReturnType<typeof render> | undefined;
+      act(() => {
+        renderResult = render(<CommandMenu open={true} onOpenChange={onOpenChange} />);
+      });
 
       expect(screen.getByPlaceholderText("Type a command or search…")).toBeInTheDocument();
       expect(screen.getByText("Topology Canvas")).toBeInTheDocument();
       expect(screen.getByText("Process & Socket Table")).toBeInTheDocument();
 
-      const results = await axe(container);
+      if (!renderResult) {
+        throw new Error("CommandMenu render failed");
+      }
+      const results = await axe(renderResult.container);
       expect(results).toHaveNoViolations();
     });
   });
 
   describe("AppShell", () => {
     it("renders semantic landmarks and child content cleanly", async () => {
-      const { container } = render(
-        <AppShell>
-          <div data-testid="test-child">Dashboard Main Content</div>
-        </AppShell>,
-      );
+      let renderResult: ReturnType<typeof render> | undefined;
+      act(() => {
+        renderResult = render(
+          <AppShell>
+            <div data-testid="test-child">Dashboard Main Content</div>
+          </AppShell>,
+        );
+      });
 
       expect(screen.getByRole("banner")).toBeInTheDocument(); // <header>
       expect(screen.getByRole("navigation")).toBeInTheDocument(); // <nav>
       expect(screen.getByRole("main")).toBeInTheDocument(); // <main>
       expect(screen.getByTestId("test-child")).toBeInTheDocument();
 
-      const results = await axe(container);
+      if (!renderResult) {
+        throw new Error("AppShell render failed");
+      }
+      const results = await axe(renderResult.container);
       expect(results).toHaveNoViolations();
     });
 
     it("opens CommandMenu on ⌘K keyboard shortcut", () => {
-      render(
-        <AppShell>
-          <div>Child</div>
-        </AppShell>,
-      );
+      act(() => {
+        render(
+          <AppShell>
+            <div>Child</div>
+          </AppShell>,
+        );
+      });
 
       act(() => {
         fireEvent.keyDown(window, { key: "k", metaKey: true });
