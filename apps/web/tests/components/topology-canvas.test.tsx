@@ -348,11 +348,11 @@ describe("TopologyTableView (Dual Presentation)", () => {
 
   it("selects node on table row click and Enter key press", () => {
     render(<TopologyTableView />);
-    const row = screen.getByRole("button", { name: /Frontend Web/i });
+    const row = screen.getByRole("row", { name: /Frontend Web/i });
     fireEvent.click(row);
     expect(useUiStore.getState().selectedNodeId).toBe("svc:frontend");
 
-    const secondRow = screen.getByRole("button", { name: /API Gateway/i });
+    const secondRow = screen.getByRole("row", { name: /API Gateway/i });
     fireEvent.keyDown(secondRow, { key: "Enter" });
     expect(useUiStore.getState().selectedNodeId).toBe("svc:api");
   });

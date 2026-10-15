@@ -78,7 +78,7 @@ describe("Route Stubs & Pages", () => {
   });
 
   describe("ProcessesPage", () => {
-    it("renders page title and table placeholder with zero a11y violations", async () => {
+    it("renders page title and virtualized table with zero a11y violations", async () => {
       const { container } = render(<ProcessesPage />);
       expect(
         screen.getByRole("heading", {
@@ -86,7 +86,7 @@ describe("Route Stubs & Pages", () => {
           name: "Process & Service Table",
         }),
       ).toBeInTheDocument();
-      expect(screen.getByTestId("processes-table-placeholder")).toBeInTheDocument();
+      expect(screen.getByTestId("processes-table-container")).toBeInTheDocument();
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
