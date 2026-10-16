@@ -430,19 +430,24 @@ function NodeDetailView({
           </div>
 
           {/* Level 3: Ask Advisor Entry Point */}
-          <div className="flex items-center justify-between gap-3 rounded-md border border-[var(--accent)]/30 bg-[var(--accent)]/10 p-3.5">
+          <div
+            data-testid="ask-advisor-cta"
+            className="flex items-center justify-between gap-3 rounded-md border border-[var(--accent)]/30 bg-[var(--accent)]/10 p-3.5"
+          >
             <div className="flex items-center gap-2.5">
               <Sparkles className="h-5 w-5 shrink-0 text-[var(--accent)]" aria-hidden="true" />
               <div>
                 <p className="text-xs font-semibold text-[var(--fg)]">AI Optimization Advisor</p>
                 <p className="text-[11px] text-[var(--fg-subtle)]">
-                  Analyze topology bottlenecks and get actionable recommendations.
+                  Analyze topology bottlenecks for <span className="font-mono">{node.id}</span> and
+                  get actionable recommendations.
                 </p>
               </div>
             </div>
             <Button
               size="sm"
               variant="default"
+              data-testid="ask-advisor-btn"
               onClick={() => {
                 onAskAdvisor(node.id);
               }}

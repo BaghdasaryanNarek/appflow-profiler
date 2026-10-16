@@ -195,3 +195,9 @@ h6 {
     animation: none !important;
   }
 }
+
+/* Deferred rendering for off-screen recommendation cards (§3.4, Phase 15) */
+.recommendation-card-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
+}
