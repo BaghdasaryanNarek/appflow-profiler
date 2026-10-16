@@ -13,6 +13,7 @@ import type {
   TopologyGraph,
 } from "@/types/contracts.gen";
 import { RingBuffer } from "./ring-buffer";
+import { useUiStore } from "./ui-store";
 
 export interface NodeHistoryBuffers {
   rps: RingBuffer;
@@ -202,6 +203,14 @@ export const useTopologyStore = create<TopologyStoreState>((set) => ({
         }
       }
 
+      const uiState = useUiStore.getState();
+      if (
+        (uiState.selectedNodeId !== null && !nextNodes.has(uiState.selectedNodeId)) ||
+        (uiState.selectedEdgeId !== null && !nextEdges.has(uiState.selectedEdgeId))
+      ) {
+        uiState.clearSelection();
+      }
+
       return {
         nodes: nextNodes,
         edges: nextEdges,
@@ -225,16 +234,28 @@ export const useTopologyStore = create<TopologyStoreState>((set) => ({
       return;
     }
 
+    const hasStructuralChanges = deltas.some(
+      ({ delta }) =>
+        (delta.removed_node_ids?.length ?? 0) > 0 ||
+        (delta.removed_edge_ids?.length ?? 0) > 0 ||
+        (delta.added_nodes?.length ?? 0) > 0 ||
+        (delta.added_edges?.length ?? 0) > 0,
+    );
+
     set((state) => {
       const nextNodes = new Map(state.nodes);
       const nextEdges = new Map(state.edges);
-      const nextAdjacency = new Map<string, Set<string>>();
-      for (const [k, v] of state.adjacency) {
-        nextAdjacency.set(k, new Set(v));
+      let nextAdjacency = state.adjacency;
+      let nextPositions = state.positions;
+      if (hasStructuralChanges) {
+        nextAdjacency = new Map<string, Set<string>>();
+        for (const [k, v] of state.adjacency) {
+          nextAdjacency.set(k, new Set(v));
+        }
+        nextPositions = new Map(state.positions);
       }
       const nextNodeHistory = new Map(state.nodeHistory);
       const nextEdgeHistory = new Map(state.edgeHistory);
-      const nextPositions = new Map(state.positions);
 
       let lastSeq = state.seq;
 
@@ -269,6 +290,16 @@ export const useTopologyStore = create<TopologyStoreState>((set) => ({
           nextAdjacency.delete(nodeId);
           nextNodeHistory.delete(nodeId);
           nextPositions.delete(nodeId);
+        }
+
+        if (removedNodeIds.size > 0 || edgesToRemove.size > 0) {
+          const uiState = useUiStore.getState();
+          if (
+            (uiState.selectedNodeId !== null && removedNodeIds.has(uiState.selectedNodeId)) ||
+            (uiState.selectedEdgeId !== null && edgesToRemove.has(uiState.selectedEdgeId))
+          ) {
+            uiState.clearSelection();
+          }
         }
 
         // 2. Added nodes

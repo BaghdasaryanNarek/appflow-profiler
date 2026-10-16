@@ -127,6 +127,10 @@ export class RealtimeClient {
     this.detachVisibilityListener();
 
     if (this.ws) {
+      this.ws.onopen = null;
+      this.ws.onmessage = null;
+      this.ws.onclose = null;
+      this.ws.onerror = null;
       try {
         this.ws.close();
       } catch {
@@ -384,6 +388,14 @@ export class RealtimeClient {
 
   private handleSocketTermination(): void {
     this.clearHeartbeatWatchdog();
+    this.clearColdStartTimer();
+    if (this.ws) {
+      this.ws.onopen = null;
+      this.ws.onmessage = null;
+      this.ws.onclose = null;
+      this.ws.onerror = null;
+      this.ws = null;
+    }
     if (this.isManuallyClosed) {
       return;
     }

@@ -148,8 +148,12 @@ export class LayoutWorkerBridge {
       pending.reject(new Error("Layout worker bridge terminated."));
     }
     this.pendingRequests.clear();
+    this.lastFingerprint = null;
+    this.lastPositions = null;
 
     if (this.worker) {
+      this.worker.onmessage = null;
+      this.worker.onerror = null;
       this.worker.terminate();
       this.worker = null;
     }

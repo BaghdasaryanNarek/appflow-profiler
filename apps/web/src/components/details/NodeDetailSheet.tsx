@@ -80,6 +80,14 @@ export function NodeDetailSheet() {
   const isDraggingRef = React.useRef(false);
   const startXRef = React.useRef(0);
   const startWidthRef = React.useRef(DEFAULT_SHEET_WIDTH);
+  const cleanupDragRef = React.useRef<(() => void) | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      cleanupDragRef.current?.();
+      cleanupDragRef.current = null;
+    };
+  }, []);
 
   // Focus restoration targets
   const lastSelectedNodeIdRef = React.useRef<string | null>(null);
@@ -138,6 +146,7 @@ export function NodeDetailSheet() {
   const handlePointerDown = React.useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       e.preventDefault();
+      cleanupDragRef.current?.();
       isDraggingRef.current = true;
       startXRef.current = e.clientX;
       startWidthRef.current = sheetWidth;
@@ -153,12 +162,20 @@ export function NodeDetailSheet() {
         setSheetWidth(nextWidth);
       };
 
-      const handlePointerUp = () => {
+      const cleanup = () => {
         isDraggingRef.current = false;
         window.removeEventListener("pointermove", handlePointerMove);
         window.removeEventListener("pointerup", handlePointerUp);
+        if (cleanupDragRef.current === cleanup) {
+          cleanupDragRef.current = null;
+        }
       };
 
+      const handlePointerUp = () => {
+        cleanup();
+      };
+
+      cleanupDragRef.current = cleanup;
       window.addEventListener("pointermove", handlePointerMove);
       window.addEventListener("pointerup", handlePointerUp);
     },
