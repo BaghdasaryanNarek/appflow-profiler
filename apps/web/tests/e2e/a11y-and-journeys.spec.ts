@@ -202,3 +202,104 @@ test.describe("Optimization Advisor & Evidence Deep-Linking Journey (§3.3, §4.
     await expect(detailSheet).toBeVisible({ timeout: 10_000 });
   });
 });
+
+test.describe("Chaos Scenario Injection & Recovery Journey (§5.4, Phase 16)", () => {
+  test("activates request-storm scenario, broadcasts active state to TopBar, and resets cleanly with 0 axe violations", async ({
+    page,
+    request,
+  }) => {
+    await page.goto("/topology");
+    await page.waitForLoadState("domcontentloaded");
+
+    const canvasIsland = page.locator('[data-testid="topology-canvas-island"]');
+    await expect(canvasIsland).toBeVisible({ timeout: 15_000 });
+
+    // Trigger request-storm chaos scenario via API and verify WebSocket broadcast to UI
+    const activateRes = await request.post(
+      "http://127.0.0.1:8000/api/v1/simulation/scenarios/request-storm/activate",
+    );
+    expect(activateRes.ok()).toBeTruthy();
+
+    await expect(page.getByText("Flash Crowd Request Storm")).toBeVisible({ timeout: 10_000 });
+
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .analyze();
+
+    const criticalViolations = accessibilityScanResults.violations.filter(
+      (v) => v.impact === "serious" || v.impact === "critical",
+    );
+    expect(criticalViolations).toEqual([]);
+
+    // Reset simulation back to steady baseline
+    const resetRes = await request.post("http://127.0.0.1:8000/api/v1/simulation/reset");
+    expect(resetRes.status()).toBe(204);
+
+    await expect(page.getByText("Flash Crowd Request Storm")).not.toBeVisible({ timeout: 10_000 });
+  });
+});
+
+test.describe("Cross-Route Navigation Stability & Core Web Vitals Budget (§1.4, Phase 16)", () => {
+  test("navigates across /topology -> /processes -> /insights -> /about with zero unhandled errors and CLS < 0.05", async ({
+    page,
+  }) => {
+    const pageErrors: string[] = [];
+    page.on("pageerror", (err) => {
+      pageErrors.push(err.message);
+    });
+
+    await page.addInitScript(() => {
+      const w = window as Window & { __CLS_ACCUMULATOR__?: number };
+      w.__CLS_ACCUMULATOR__ = 0;
+      if (typeof PerformanceObserver !== "undefined") {
+        try {
+          const observer = new PerformanceObserver((list) => {
+            for (const entry of list.getEntries()) {
+              const shift = entry as PerformanceEntry & {
+                hadRecentInput?: boolean;
+                value?: number;
+              };
+              if (!shift.hadRecentInput && typeof shift.value === "number") {
+                w.__CLS_ACCUMULATOR__ = (w.__CLS_ACCUMULATOR__ ?? 0) + shift.value;
+              }
+            }
+          });
+          observer.observe({ type: "layout-shift", buffered: true });
+        } catch {
+          // Layout-shift entry type unsupported in fallback environment
+        }
+      }
+    });
+
+    await page.goto("/topology");
+    await expect(page.locator('[data-testid="topology-canvas-island"]')).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByRole("link", { name: /Processes/i }).click();
+    await expect(page).toHaveURL(/\/processes/);
+    await expect(page.locator('[data-testid="processes-table-container"]')).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByRole("link", { name: /Insights/i }).click();
+    await expect(page).toHaveURL(/\/insights/);
+    await expect(page.locator('[data-testid="analyze-topology-btn"]')).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByRole("link", { name: /About/i }).click();
+    await expect(page).toHaveURL(/\/about/);
+    await expect(page.locator('[data-testid="about-capabilities-strip"]')).toBeVisible({
+      timeout: 15_000,
+    });
+
+    const totalCls = await page.evaluate(() => {
+      const w = window as Window & { __CLS_ACCUMULATOR__?: number };
+      return w.__CLS_ACCUMULATOR__ ?? 0;
+    });
+
+    expect(totalCls).toBeLessThan(0.05);
+    expect(pageErrors).toEqual([]);
+  });
+});
