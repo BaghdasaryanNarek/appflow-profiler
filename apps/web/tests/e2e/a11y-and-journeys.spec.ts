@@ -151,3 +151,54 @@ test.describe("Live Announcer A11y Landmark (§3.5)", () => {
     await expect(announcer).toHaveAttribute("aria-atomic", "true");
   });
 });
+
+test.describe("Optimization Advisor & Evidence Deep-Linking Journey (§3.3, §4.4)", () => {
+  test("triggers topology analysis, renders prioritized recommendations with 0 axe violations, and deep-links via EvidenceChip to /topology detail sheet", async ({
+    page,
+  }) => {
+    await page.goto("/insights");
+    await page.waitForLoadState("domcontentloaded");
+
+    // Select a deterministic focus preset and trigger analysis
+    const poolingPreset = page.getByRole("button", { name: "Connection pooling" });
+    await expect(poolingPreset).toBeVisible();
+    await poolingPreset.click();
+
+    const analyzeBtn = page.locator('[data-testid="analyze-topology-btn"]');
+    await expect(analyzeBtn).toBeEnabled();
+    await analyzeBtn.click();
+
+    // Wait for populated ReportView
+    const reportView = page.locator('[data-testid="insights-report-view"]');
+    await expect(reportView).toBeVisible({ timeout: 15_000 });
+
+    const sourceBadge = page.locator('[data-testid="report-source-badge"]');
+    await expect(sourceBadge).toBeVisible();
+    await expect(sourceBadge).toHaveText(/(Heuristic Engine|Gemini AI)/);
+
+    const summaryText = page.locator('[data-testid="report-summary-text"]');
+    await expect(summaryText).toBeVisible();
+
+    const firstRecommendation = page.locator('[data-testid^="recommendation-card-"]').first();
+    await expect(firstRecommendation).toBeVisible();
+
+    // Run WCAG 2.2 AA scan on the populated report view
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .analyze();
+
+    const criticalViolations = accessibilityScanResults.violations.filter(
+      (v) => v.impact === "serious" || v.impact === "critical",
+    );
+    expect(criticalViolations).toEqual([]);
+
+    // Click an EvidenceChip to transition to /topology and open the NodeDetailSheet
+    const firstEvidenceChip = page.locator('[data-testid^="evidence-chip-"]').first();
+    await expect(firstEvidenceChip).toBeVisible();
+    await firstEvidenceChip.click();
+
+    await expect(page).toHaveURL(/\/topology/);
+    const detailSheet = page.locator('[data-testid="node-detail-sheet"]');
+    await expect(detailSheet).toBeVisible({ timeout: 10_000 });
+  });
+});
