@@ -421,8 +421,27 @@ export class RealtimeClient {
     this.coldStartTimer = setTimeout(() => {
       if (this.reconnectAttempt >= 1 || (this.ws && this.ws.readyState === WebSocket.CONNECTING)) {
         useUiStore.getState().setConnectionStatus("waking_up");
+        this.pingHttpHealthzForColdStart();
       }
     }, 3000);
+  }
+
+  /**
+   * Issue a best-effort HTTP GET /healthz wake-up request when the WebSocket
+   * handshake stalls on a cold-sleeping Render free-tier instance (§5.5, Phase 17).
+   */
+  private pingHttpHealthzForColdStart(): void {
+    if (typeof fetch === "undefined") {
+      return;
+    }
+    try {
+      const parsed = new URL(this.url);
+      const httpProto = parsed.protocol === "wss:" ? "https:" : "http:";
+      const healthUrl = `${httpProto}//${parsed.host}/healthz`;
+      void fetch(healthUrl, { method: "GET", cache: "no-store" }).catch(() => undefined);
+    } catch {
+      // Ignore malformed URLs in synthetic unit test environments
+    }
   }
 
   private clearColdStartTimer(): void {
