@@ -1,0 +1,34 @@
+# Render Blueprint for AppFlow Profiler Backend (Master Plan §5.5, §6.4, Phase 17)
+services:
+  - type: web
+    name: appflow-api
+    runtime: docker
+    rootDir: apps/api
+    dockerfilePath: ./Dockerfile
+    plan: free
+    numInstances: 1
+    healthCheckPath: /healthz
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: ENV
+        value: "demo"
+      - key: SIM_AUTOPLAY
+        value: "true"
+      - key: TICK_MS
+        value: "1000"
+      - key: SNAPSHOT_EVERY_S
+        value: "30"
+      - key: MAX_WS_CLIENTS
+        value: "50"
+      - key: ALLOWED_ORIGINS
+        value: "http://localhost:3000,http://127.0.0.1:3000,https://appflow-profiler.vercel.app"
+      - key: ALLOWED_ORIGIN_SUFFIXES
+        value: ".vercel.app"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: "gemini-3.8-flash"
+      - key: ADVISOR_TIMEOUT_S
+        value: "25"
+      - key: LOG_LEVEL
+        value: "INFO"
