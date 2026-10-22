@@ -33,12 +33,21 @@ MAX_INBOUND_FRAME_BYTES = 4096
 MAX_PROTOCOL_ERRORS = 3
 
 
-def _is_origin_allowed(origin: str | None, allowed_origins: list[str]) -> bool:
-    """Validate WebSocket origin against configured allowed origins."""
+def _is_origin_allowed(
+    origin: str | None,
+    allowed_origins: list[str],
+    allowed_origin_suffixes: list[str] | None = None,
+) -> bool:
+    """Validate WebSocket origin against configured allowed origins and HTTPS suffixes."""
     if not origin:
         return True
-    clean_origin = origin.rstrip("/")
-    return any(allowed == "*" or allowed.rstrip("/") == clean_origin for allowed in allowed_origins)
+    temp_settings = Settings(
+        allowed_origins=allowed_origins,
+        allowed_origin_suffixes=allowed_origin_suffixes
+        if allowed_origin_suffixes is not None
+        else [],
+    )
+    return temp_settings.is_origin_allowed(origin)
 
 
 @router.websocket("/ws/v1/topology")
@@ -54,9 +63,9 @@ async def websocket_topology(websocket: WebSocket) -> None:
     settings = raw_settings
     hub = raw_hub
 
-    # 1. Validate Origin header
+    # 1. Validate Origin header (exact ALLOWED_ORIGINS + HTTPS ALLOWED_ORIGIN_SUFFIXES)
     origin_header = websocket.headers.get("origin")
-    if not _is_origin_allowed(origin_header, settings.allowed_origins):
+    if not settings.is_origin_allowed(origin_header):
         _log.warning("ws_rejected_disallowed_origin", origin=origin_header)
         await websocket.close(code=1008, reason="Origin not permitted")
         return

@@ -85,10 +85,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Insights analyses: 5 req / 60s
     app.state.insights_limiter = TokenBucketLimiter(rate_per_second=5.0 / 60.0, capacity=5.0)
 
-    # CORS configuration per ALLOWED_ORIGINS
+    # CORS configuration per ALLOWED_ORIGINS and ALLOWED_ORIGIN_SUFFIXES
     app.add_middleware(
         CORSMiddleware,
         allow_origins=resolved.allowed_origins,
+        allow_origin_regex=resolved.allow_origin_regex,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
