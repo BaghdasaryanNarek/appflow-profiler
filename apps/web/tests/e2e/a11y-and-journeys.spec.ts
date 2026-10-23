@@ -213,6 +213,9 @@ test.describe("Chaos Scenario Injection & Recovery Journey (§5.4, Phase 16)", (
 
     const canvasIsland = page.locator('[data-testid="topology-canvas-island"]');
     await expect(canvasIsland).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("stream-status-badge")).toHaveText("connected", {
+      timeout: 15_000,
+    });
 
     // Trigger request-storm chaos scenario via API and verify WebSocket broadcast to UI
     const activateRes = await request.post(

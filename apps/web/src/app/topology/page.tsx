@@ -33,11 +33,11 @@ export default async function TopologyPage() {
         </p>
       </div>
 
-      {/* Server-Rendered LCP KPI Strip */}
+      {/* Server-Rendered LCP KPI Strip with Live Store Hydration */}
       <KpiStrip summary={initialSummary} />
 
-      {/* Live Stream Controller & Metrics Strip */}
-      <TopologyLiveStrip />
+      {/* Live Stream Controller Bar */}
+      <TopologyLiveStrip showKpiCards={false} />
 
       {/* Hero Canvas Island with strict height to guarantee 0 CLS */}
       <div

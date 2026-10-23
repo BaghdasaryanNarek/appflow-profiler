@@ -1,7 +1,11 @@
+"use client";
+
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Network, Activity, ArrowUpRight, ShieldAlert, Cpu } from "lucide-react";
-import { formatNumber, formatDuration, formatPercent } from "@/lib/format";
+import { formatRps, formatLatencyMs, formatPercent } from "@/lib/format";
+import { useKpiSummary } from "@/store/selectors";
+import { useUiStore } from "@/store/ui-store";
 import type { TopologySummary } from "@/types/contracts.gen";
 
 export interface KpiStripProps {
@@ -9,19 +13,25 @@ export interface KpiStripProps {
 }
 
 /**
- * Server-renderable KPI headline strip (the LCP element per §0.3 & §3.6).
- * Uses container queries and tabular figures to present instant fleet health on initial paint.
+ * Server-renderable KPI headline strip (the LCP element per §0.3 & §3.6) with
+ * seamless client hydration from the live WebSocket topology store.
+ * Uses container queries and tabular figures to present instant fleet health on initial paint
+ * while automatically switching to live telemetry once the WebSocket stream populates.
  */
 export function KpiStrip({ summary }: KpiStripProps) {
-  const nodeCount = summary?.node_count ?? 0;
-  const edgeCount = summary?.edge_count ?? 0;
-  const totalRps = summary?.total_rps ?? 0;
-  const p99Ms = summary?.global_p99_ms ?? 0;
-  const errorRate = summary?.global_error_rate ?? 0;
-  const critCount = summary?.critical_count ?? 0;
-  const deprCount = summary?.degraded_count ?? 0;
-  const mode = summary?.mode ?? "demo";
-  const scenario = summary?.active_scenario;
+  const liveKpi = useKpiSummary();
+  const connectionStatus = useUiStore((s) => s.connectionStatus);
+
+  const hasLive = liveKpi.nodeCount > 0;
+  const nodeCount = hasLive ? liveKpi.nodeCount : (summary?.node_count ?? 0);
+  const edgeCount = hasLive ? liveKpi.edgeCount : (summary?.edge_count ?? 0);
+  const totalRps = hasLive ? liveKpi.totalRps : (summary?.total_rps ?? 0);
+  const p99Ms = hasLive ? liveKpi.globalP99Ms : (summary?.global_p99_ms ?? 0);
+  const errorRate = hasLive ? liveKpi.globalErrorRate : (summary?.global_error_rate ?? 0);
+  const critCount = hasLive ? liveKpi.criticalCount : (summary?.critical_count ?? 0);
+  const deprCount = hasLive ? liveKpi.degradedCount : (summary?.degraded_count ?? 0);
+  const mode = hasLive ? liveKpi.mode : (summary?.mode ?? "demo");
+  const scenario = hasLive ? liveKpi.activeScenario : (summary?.active_scenario ?? null);
 
   return (
     <div className="@container w-full" aria-label="Fleet Key Performance Indicators">
@@ -34,8 +44,11 @@ export function KpiStrip({ summary }: KpiStripProps) {
             </div>
             <div className="overflow-hidden">
               <p className="text-[11px] font-medium text-[var(--fg-muted)]">Fleet Entities</p>
-              <p className="font-mono text-lg font-bold text-[var(--fg)] tabular-nums sm:text-xl">
-                {nodeCount > 0 ? (
+              <p
+                className="font-mono text-lg font-bold text-[var(--fg)] tabular-nums sm:text-xl"
+                data-testid="kpi-node-count"
+              >
+                {nodeCount > 0 || connectionStatus === "connected" ? (
                   <>
                     <span>{nodeCount}</span>
                     <span className="ml-1 text-xs font-normal text-[var(--fg-muted)]">
@@ -58,8 +71,11 @@ export function KpiStrip({ summary }: KpiStripProps) {
             </div>
             <div className="overflow-hidden">
               <p className="text-[11px] font-medium text-[var(--fg-muted)]">Throughput</p>
-              <p className="font-mono text-lg font-bold text-[var(--fg)] tabular-nums sm:text-xl">
-                {totalRps > 0 ? `${formatNumber(totalRps)} rps` : "0 rps"}
+              <p
+                className="font-mono text-lg font-bold text-[var(--fg)] tabular-nums sm:text-xl"
+                data-testid="kpi-total-rps"
+              >
+                {totalRps > 0 ? formatRps(totalRps) : "0 rps"}
               </p>
             </div>
           </CardContent>
@@ -73,8 +89,11 @@ export function KpiStrip({ summary }: KpiStripProps) {
             </div>
             <div className="overflow-hidden">
               <p className="text-[11px] font-medium text-[var(--fg-muted)]">Global p99</p>
-              <p className="font-mono text-lg font-bold text-[var(--fg)] tabular-nums sm:text-xl">
-                {p99Ms > 0 ? formatDuration(p99Ms) : "--"}
+              <p
+                className="font-mono text-lg font-bold text-[var(--fg)] tabular-nums sm:text-xl"
+                data-testid="kpi-p99-ms"
+              >
+                {p99Ms > 0 ? formatLatencyMs(p99Ms) : "--"}
               </p>
             </div>
           </CardContent>
@@ -88,7 +107,10 @@ export function KpiStrip({ summary }: KpiStripProps) {
             </div>
             <div className="overflow-hidden">
               <p className="text-[11px] font-medium text-[var(--fg-muted)]">Error Rate</p>
-              <p className="font-mono text-lg font-bold text-[var(--fg)] tabular-nums sm:text-xl">
+              <p
+                className="font-mono text-lg font-bold text-[var(--fg)] tabular-nums sm:text-xl"
+                data-testid="kpi-error-rate"
+              >
                 {errorRate > 0 ? (
                   <span className="text-[var(--crit)]">{formatPercent(errorRate)}</span>
                 ) : (
@@ -107,7 +129,7 @@ export function KpiStrip({ summary }: KpiStripProps) {
             </div>
             <div className="overflow-hidden">
               <p className="text-[11px] font-medium text-[var(--fg-muted)]">Status</p>
-              <div className="flex items-center gap-1.5 font-mono text-xs">
+              <div className="flex items-center gap-1.5 font-mono text-xs" data-testid="kpi-status">
                 {critCount > 0 ? (
                   <span className="font-bold text-[var(--crit)]">{critCount} Critical</span>
                 ) : deprCount > 0 ? (

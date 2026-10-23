@@ -9,6 +9,8 @@ import InsightsPage from "@/app/insights/page";
 import AboutPage from "@/app/about/page";
 import NotFound from "@/app/not-found";
 import RootPage from "@/app/page";
+import { KpiStrip } from "@/components/topology/KpiStrip";
+import { useTopologyStore } from "@/store/topology-store";
 import { redirect } from "next/navigation";
 
 vi.mock("next/navigation", () => ({
@@ -75,6 +77,53 @@ describe("Route Stubs & Pages", () => {
     it("renders loading skeleton", () => {
       const { container } = render(<TopologyLoading />);
       expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
+    });
+
+    it("hydrates KpiStrip from Connecting fallback to live store telemetry", () => {
+      useTopologyStore.getState().reset();
+      render(<KpiStrip summary={null} />);
+
+      expect(screen.getByTestId("kpi-node-count")).toHaveTextContent("Connecting…");
+      expect(screen.getByTestId("kpi-total-rps")).toHaveTextContent("0 rps");
+      expect(screen.getByTestId("kpi-p99-ms")).toHaveTextContent("--");
+
+      React.act(() => {
+        useTopologyStore.getState().applySnapshot(
+          {
+            timestamp: "2026-10-23T00:00:00Z",
+            nodes: [
+              {
+                id: "svc:api-gateway",
+                kind: "service",
+                label: "api-gateway",
+                group_id: "grp:edge",
+                health: "healthy",
+                tags: {},
+                metrics: {
+                  cpu_percent: 22.0,
+                  rss_bytes: 134_217_728,
+                  open_connections: 64,
+                  rps: 320.0,
+                  p50_ms: 4.0,
+                  p99_ms: 19.5,
+                  error_rate: 0.0,
+                  saturation: 0.25,
+                  quality: "measured",
+                },
+              },
+            ],
+            edges: [],
+          },
+          1,
+        );
+      });
+
+      expect(screen.getByTestId("kpi-node-count")).toHaveTextContent("1/ 0 edges");
+      expect(screen.getByTestId("kpi-total-rps")).toHaveTextContent("320 rps");
+      expect(screen.getByTestId("kpi-p99-ms")).toHaveTextContent("20 ms");
+      React.act(() => {
+        useTopologyStore.getState().reset();
+      });
     });
   });
 

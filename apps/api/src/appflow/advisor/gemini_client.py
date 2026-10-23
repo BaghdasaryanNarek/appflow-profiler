@@ -1,5 +1,6 @@
 """Gemini Interactions API async client for structured optimization reports (Master Plan §4.4)."""
 
+import asyncio
 import json
 from typing import Any
 
@@ -63,13 +64,16 @@ class GeminiAdvisorClient:
                 timeout_s=self._timeout_s,
             )
 
-            response = await self._client.aio.interactions.create(
-                model=self._model,
-                input=user_prompt,
-                system_instruction=SYSTEM_INSTRUCTION,
-                store=False,
-                response_mime_type="application/json",
-                response_format=schema,
+            response = await asyncio.wait_for(
+                self._client.aio.interactions.create(
+                    model=self._model,
+                    input=user_prompt,
+                    system_instruction=SYSTEM_INSTRUCTION,
+                    store=False,
+                    response_mime_type="application/json",
+                    response_format=schema,
+                    timeout=self._timeout_s,
+                ),
                 timeout=self._timeout_s,
             )
 

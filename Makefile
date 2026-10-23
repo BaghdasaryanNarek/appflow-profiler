@@ -37,8 +37,11 @@ web-check: ## Lint, format-check, type-check, test and build the frontend
 	$(PNPM) --dir $(WEB_DIR) test
 	NEXT_PUBLIC_API_URL="http://localhost:8000" NEXT_PUBLIC_WS_URL="ws://localhost:8000/ws/v1/topology" $(PNPM) --dir $(WEB_DIR) build
 
-smoke: ## Run deployment smoke verification against the demo backend
+smoke: ## Run deployment smoke verification against the demo backend (or API_URL)
 	cd $(API_DIR) && $(UV) run python ../../scripts/smoke_deploy.py
 
-dev: ## Run backend and frontend in development mode
-	@echo "dev: not yet implemented"
+dev: ## Run backend and frontend concurrently in local development mode
+	trap 'kill 0' INT TERM EXIT; \
+	(cd $(API_DIR) && $(UV) run uvicorn appflow.main:create_app --factory --reload --host 127.0.0.1 --port 8000) & \
+	$(PNPM) --dir $(WEB_DIR) dev & \
+	wait
