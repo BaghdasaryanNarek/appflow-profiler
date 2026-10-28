@@ -1,0 +1,4 @@
+# Files owned by pnpm: pnpm rewrites them in its own format on every install/update,
+# so formatting them with Prettier makes every Dependabot PR fail format:check.
+pnpm-lock.yaml
+pnpm-workspace.yaml
