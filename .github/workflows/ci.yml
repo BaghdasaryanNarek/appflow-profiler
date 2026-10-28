@@ -82,7 +82,7 @@ jobs:
           package_json_file: apps/web/package.json
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: apps/web/package.json
           cache: pnpm
@@ -111,7 +111,7 @@ jobs:
           package_json_file: apps/web/package.json
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: apps/web/package.json
           cache: pnpm
@@ -166,7 +166,7 @@ jobs:
           package_json_file: apps/web/package.json
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: apps/web/package.json
           cache: pnpm
