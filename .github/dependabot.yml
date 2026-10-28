@@ -1,19 +1,58 @@
 version: 2
+# Minor and patch updates are grouped into one PR per ecosystem; majors are not
+# grouped, so each one arrives as its own PR for manual review.
+# Labels must already exist in the repo: Dependabot silently drops unknown ones.
+# See CONTRIBUTING.md ("Dependency updates").
 updates:
-  - package-ecosystem: "pip"
+  - package-ecosystem: "uv"
     directory: "/apps/api"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      uv-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
 
   - package-ecosystem: "npm"
     directory: "/apps/web"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      npm-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+      - "javascript"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      actions-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+      - "github_actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
