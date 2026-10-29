@@ -62,7 +62,8 @@ All REST and WebSocket payloads are defined once as strict **Pydantic v2** model
 
 - **Node.js 24**: declared once in `engines.node` (`"24.x"`) of [`apps/web/package.json`](../apps/web/package.json), which both Vercel and CI (`actions/setup-node` with `node-version-file`) read. The root `.nvmrc` mirrors the major for nvm/fnm users.
 - **pnpm 12.14.0**: declared once in `packageManager` of `apps/web/package.json`, which CI (`pnpm/action-setup` with `package_json_file`) and local pnpm read. pnpm 12 records its own resolution and integrity in a leading document of `pnpm-lock.yaml`.
-- [`apps/web/tests/unit/toolchain.test.ts`](../apps/web/tests/unit/toolchain.test.ts) fails if the pins drift or become ranges, or if pnpm-owned files lose their [`.prettierignore`](../apps/web/.prettierignore) entry.
+- **Next.js 15.5.x**: `next` and `eslint-config-next` are pinned to the same exact version, so framework code changes only through a reviewed diff in `package.json` rather than a fresh lock resolution. Dependabot only proposes the Next 16 major, which is deferred until after stage 1; until that change lands, security patches within 15.x are applied by hand (as in `patch-next-security`, 15.5.27 → 15.5.28).
+- [`apps/web/tests/unit/toolchain.test.ts`](../apps/web/tests/unit/toolchain.test.ts) fails if the pins drift or become ranges, if the lockfile resolves `next` below 15.5.28 or `sharp` below 0.35.5 (the patched versions for the Image Optimization and Server Actions advisories), or if pnpm-owned files lose their [`.prettierignore`](../apps/web/.prettierignore) entry.
 - **Dependabot** (`uv` for `apps/api`, `npm` for `apps/web`, `github-actions`) groups minor and patch updates into one PR per ecosystem and opens majors separately. The workflow is in [`CONTRIBUTING.md`](../CONTRIBUTING.md#4-dependency-updates).
 
 ---
