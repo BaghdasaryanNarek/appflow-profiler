@@ -101,6 +101,9 @@ export const TrafficEdge = React.memo(function TrafficEdge({
   );
 
   const edgeDescription = `Edge ${id}, protocol ${data?.protocol ?? "tcp"}, health ${health}, ${rps.toLocaleString()} requests per second`;
+  // The pill's name starts with its visible "<rps> rps" text (WCAG 2.5.3); the hit-target path has none.
+  // The {" "} between the pill's spans keeps the visible words apart; flex layout drops it visually.
+  const pillText = `${formatNumber(rps)} rps`;
 
   return (
     <>
@@ -159,9 +162,9 @@ export const TrafficEdge = React.memo(function TrafficEdge({
                       selected &&
                         "border-[var(--accent)] text-[var(--accent)] ring-1 ring-[var(--accent)]",
                     )}
-                    aria-label={edgeDescription}
+                    aria-label={`${pillText}, ${edgeDescription}`}
                   >
-                    <span>{formatNumber(rps)}</span>
+                    <span>{formatNumber(rps)}</span>{" "}
                     <span className="ml-0.5 text-[7px] opacity-75">rps</span>
                   </button>
                 </TooltipTrigger>
