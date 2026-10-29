@@ -15,6 +15,7 @@ import { useTopologyStore } from "@/store/topology-store";
 import { useUiStore } from "@/store/ui-store";
 import type { HealthStatus, NodeMetrics } from "@/types/contracts.gen";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { VisuallyHidden } from "@/components/a11y/VisuallyHidden";
 import { NodeSparkline } from "./NodeSparkline";
 
 export interface BaseNodeCardProps {
@@ -117,9 +118,10 @@ export const BaseNodeCard = React.memo(function BaseNodeCard({
 
   const HealthIcon = healthConfig.icon;
 
-  const accessibleLabel = React.useMemo(() => {
-    return `${kind} ${label}, health ${health}, ${formatNumber(metrics.rps)} requests per second, p99 ${String(Math.round(metrics.p99_ms))} milliseconds, ${String(upCount)} upstream, ${String(downCount)} downstream`;
-  }, [kind, label, health, metrics.rps, metrics.p99_ms, upCount, downCount]);
+  // The accessible name comes from the visible content (WCAG 2.5.3 Label in Name);
+  // context that isn't shown on the card is exposed as the accessible description.
+  const descriptionId = React.useId();
+  const accessibleDescription = `health ${health}, ${String(upCount)} upstream, ${String(downCount)} downstream`;
 
   const handleClick = React.useCallback(
     (e: React.MouseEvent) => {
@@ -149,7 +151,7 @@ export const BaseNodeCard = React.memo(function BaseNodeCard({
             data-node-id={id}
             tabIndex={0}
             role="button"
-            aria-label={accessibleLabel}
+            aria-describedby={descriptionId}
             aria-pressed={selected}
             onClick={handleClick}
             onKeyDown={handleKeyDown}
@@ -162,6 +164,10 @@ export const BaseNodeCard = React.memo(function BaseNodeCard({
               className,
             )}
           >
+            <span id={descriptionId} hidden>
+              {accessibleDescription}
+            </span>
+
             {/* React Flow Left Handle (Target) */}
             <Handle
               type="target"
@@ -176,6 +182,8 @@ export const BaseNodeCard = React.memo(function BaseNodeCard({
                   <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                 </div>
                 <div className="flex flex-col overflow-hidden">
+                  {/* Explicit spaces keep words apart in the name; flex drops them visually */}
+                  <VisuallyHidden>{kind}</VisuallyHidden>{" "}
                   <span
                     className="truncate font-mono text-xs font-semibold text-[var(--fg)]"
                     title={label}
@@ -183,7 +191,12 @@ export const BaseNodeCard = React.memo(function BaseNodeCard({
                     {label}
                   </span>
                   {sublabel && (
-                    <span className="truncate text-[10px] text-[var(--fg-muted)]">{sublabel}</span>
+                    <>
+                      {" "}
+                      <span className="truncate text-[10px] text-[var(--fg-muted)]">
+                        {sublabel}
+                      </span>
+                    </>
                   )}
                 </div>
               </div>
@@ -194,9 +207,8 @@ export const BaseNodeCard = React.memo(function BaseNodeCard({
                   "flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium",
                   healthConfig.badgeBg,
                 )}
-                aria-hidden="true"
               >
-                <HealthIcon className="h-3 w-3" />
+                <HealthIcon className="h-3 w-3" aria-hidden="true" />
                 <span>{healthConfig.text}</span>
               </div>
             </div>
@@ -206,7 +218,7 @@ export const BaseNodeCard = React.memo(function BaseNodeCard({
               <div className="flex flex-col">
                 <span className="text-[9px] tracking-wider text-[var(--fg-muted)] uppercase">
                   RPS
-                </span>
+                </span>{" "}
                 <span className="font-semibold text-[var(--fg)] tabular-nums">
                   {formatNumber(metrics.rps)}
                 </span>
@@ -215,7 +227,7 @@ export const BaseNodeCard = React.memo(function BaseNodeCard({
               <div className="flex flex-col">
                 <span className="text-[9px] tracking-wider text-[var(--fg-muted)] uppercase">
                   p99
-                </span>
+                </span>{" "}
                 <span className="font-semibold text-[var(--fg)] tabular-nums">
                   {formatLatencyMs(metrics.p99_ms)}
                 </span>
@@ -224,7 +236,7 @@ export const BaseNodeCard = React.memo(function BaseNodeCard({
               <div className="flex flex-col">
                 <span className="text-[9px] tracking-wider text-[var(--fg-muted)] uppercase">
                   {metrics.error_rate > 0 ? "Err" : "Sat"}
-                </span>
+                </span>{" "}
                 <span
                   className={cn(
                     "font-semibold tabular-nums",

@@ -85,7 +85,8 @@ export function EvidenceChip({ nodeId, label, health, onNavigate, className }: E
     [handleActivate],
   );
 
-  const ariaLabel = `Inspect evidence node ${resolvedLabel} (${nodeId}), health ${meta.text}, on topology map`;
+  // Starts with the visible kind and label (WCAG 2.5.3); the "(nodeId)" part is parenthetical
+  const ariaLabel = `${resolvedKind ? `${resolvedKind} ` : ""}${resolvedLabel} (${nodeId}), health ${meta.text}, inspect on topology map`;
 
   return (
     <button
@@ -103,16 +104,22 @@ export function EvidenceChip({ nodeId, label, health, onNavigate, className }: E
       )}
     >
       <StatusIcon className={cn("h-3.5 w-3.5 shrink-0", meta.iconClass)} aria-hidden={true} />
+      {/* Explicit spaces keep the visible words apart for WCAG 2.5.3; flex layout drops them */}
       {resolvedKind ? (
-        <span className="font-mono text-[10px] tracking-wider text-[var(--fg-muted)] uppercase">
-          {resolvedKind}
-        </span>
+        <>
+          <span className="font-mono text-[10px] tracking-wider text-[var(--fg-muted)] uppercase">
+            {resolvedKind}
+          </span>{" "}
+        </>
       ) : null}
       <span className="truncate font-semibold text-[var(--fg)]">{resolvedLabel}</span>
       {resolvedLabel !== nodeId ? (
-        <span className="hidden font-mono text-[10px] text-[var(--fg-muted)] @sm:inline">
-          ({nodeId})
-        </span>
+        <>
+          {" "}
+          <span className="hidden font-mono text-[10px] text-[var(--fg-muted)] @sm:inline">
+            ({nodeId})
+          </span>
+        </>
       ) : null}
       <span className="sr-only">({meta.text})</span>
       <ArrowUpRight

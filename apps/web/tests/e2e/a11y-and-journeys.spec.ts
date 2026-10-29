@@ -57,10 +57,10 @@ test.describe("Keyboard Navigation & Progressive Disclosure Journey (§3.5)", ()
     await firstNode.focus();
     await expect(firstNode).toBeFocused();
 
-    // Verify node aria-label contains expected telemetry and adjacency contract
-    const ariaLabel = (await firstNode.getAttribute("aria-label")) ?? "";
-    expect(ariaLabel).toMatch(
-      /health (healthy|degraded|critical|unknown).*requests per second.*p99 \d+ milliseconds.*\d+ upstream.*\d+ downstream/,
+    // Verify the node exposes its telemetry (name = visible text, WCAG 2.5.3) and adjacency contract
+    await expect(firstNode).toHaveAccessibleName(/RPS \S+ p99 \S+ m?s\b/);
+    await expect(firstNode).toHaveAccessibleDescription(
+      /^health (healthy|degraded|critical|unknown), \d+ upstream, \d+ downstream$/,
     );
 
     // Directional keyboard navigation

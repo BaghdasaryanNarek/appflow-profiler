@@ -67,6 +67,9 @@ export const CanvasToolbar = React.memo(function CanvasToolbar({ className }: Ca
 
   const hasActiveFilters = kinds.length > 0 || minRps > 0 || searchQuery.trim().length > 0;
 
+  // Shared by the visible label and aria-label so the name always starts with it (WCAG 2.5.3)
+  const lodText = lodCollapsed === true ? "LOD: Grouped" : "LOD: Detail";
+
   return (
     <div
       className={cn(
@@ -222,13 +225,11 @@ export const CanvasToolbar = React.memo(function CanvasToolbar({ className }: Ca
               : "text-[var(--fg-muted)] hover:text-[var(--fg)]",
           )}
           title="Toggle Level of Detail Grouping"
-          aria-label="Toggle Level of Detail Grouping"
+          aria-label={`${lodText}, toggle level of detail grouping`}
           aria-pressed={lodCollapsed === true}
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">
-            {lodCollapsed === true ? "LOD: Grouped" : "LOD: Detail"}
-          </span>
+          <span className="hidden sm:inline">{lodText}</span>
         </button>
 
         {/* View Mode Toggle (Canvas vs Accessible Table) */}

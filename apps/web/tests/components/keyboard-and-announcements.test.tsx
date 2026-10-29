@@ -186,10 +186,10 @@ describe("BaseNodeCard ARIA Contract (§3.5)", () => {
     );
 
     const card = screen.getByRole("button", {
-      name: "service Order Processing Service, health degraded, 250 requests per second, p99 85 milliseconds, 2 upstream, 1 downstream",
+      name: /^service Order Processing Service Degraded RPS 250 p99 85(\.\d)? ms Err 2\.0%$/,
     });
 
-    expect(card).toBeInTheDocument();
+    expect(card).toHaveAccessibleDescription("health degraded, 2 upstream, 1 downstream");
   });
 });
 
