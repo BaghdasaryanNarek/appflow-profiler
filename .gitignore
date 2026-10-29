@@ -25,6 +25,7 @@ out/
 next-env.d.ts
 npm-debug.log*
 pnpm-debug.log*
+.pnpm-store/
 yarn-error.log*
 
 # --- Testing artifacts ---
