@@ -12,7 +12,7 @@ dependencies = [
     "pydantic-settings>=2.16.1",
     "psutil>=6.1",
     "structlog>=24.4",
-    "uvicorn[standard]>=0.32",
+    "uvicorn[standard]>=0.54.0",
     "google-genai>=2.33.0",
 ]
 
