@@ -263,7 +263,7 @@ describe("Topology Custom Nodes", () => {
     expect(screen.getByText("Payments Group")).toBeInTheDocument();
     expect(screen.getByText("4 nodes")).toBeInTheDocument();
 
-    const toggleBtn = screen.getByRole("button", { name: "Expand service group" });
+    const toggleBtn = screen.getByRole("button", { name: "4 nodes, expand service group" });
     fireEvent.click(toggleBtn);
 
     const results = await axe(container);

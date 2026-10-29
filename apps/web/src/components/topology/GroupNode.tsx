@@ -17,6 +17,7 @@ export const GroupNode = React.memo(function GroupNode({ id, data, selected }: G
 
   const memberCount = data.memberCount ?? 1;
   const isCollapsed = data.isCollapsed ?? (lodCollapsed === true || lodCollapsed === "auto");
+  const memberCountText = `${String(memberCount)} nodes`;
 
   const toggleExpand = React.useCallback(
     (e: React.MouseEvent) => {
@@ -63,9 +64,9 @@ export const GroupNode = React.memo(function GroupNode({ id, data, selected }: G
           type="button"
           onClick={toggleExpand}
           className="flex items-center gap-1 rounded bg-[var(--surface)] px-1.5 py-0.5 text-[10px] text-[var(--fg-muted)] hover:text-[var(--fg)] focus-visible:ring-1 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
-          aria-label={isCollapsed ? "Expand service group" : "Collapse service group"}
+          aria-label={`${memberCountText}, ${isCollapsed ? "expand" : "collapse"} service group`}
         >
-          <span>{memberCount} nodes</span>
+          <span>{memberCountText}</span>
           {isCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
         </button>
       </div>
