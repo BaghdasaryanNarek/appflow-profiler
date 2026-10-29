@@ -21,6 +21,8 @@ function ignoredPatterns(ignoreFile: string): string[] {
 interface WebManifest {
   packageManager?: unknown;
   engines?: { node?: unknown };
+  dependencies?: Record<string, unknown>;
+  devDependencies?: Record<string, unknown>;
 }
 
 function readManifest(): WebManifest {
@@ -79,6 +81,110 @@ describe("Node.js pin", () => {
       expect(enginesNodeMajor(value)).toBeNull();
     },
   );
+});
+
+// next is exact-pinned so framework code changes only through a reviewed diff
+// (docs/ARCHITECTURE.md, "Toolchain Pins & Dependency Updates").
+type Semver = [number, number, number];
+
+function parseExactVersion(value: unknown): Semver | null {
+  if (typeof value !== "string") return null;
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(value);
+  if (match === null) return null;
+  return [Number(match[1]), Number(match[2]), Number(match[3])];
+}
+
+function isAtLeast(version: Semver, floor: Semver): boolean {
+  for (let i = 0; i < 3; i++) {
+    if (version[i] !== floor[i]) return (version[i] ?? 0) > (floor[i] ?? 0);
+  }
+  return true;
+}
+
+// Matches top-level package keys (`  next@15.5.28:` / `  next@15.5.28(peer...)`),
+// not scoped packages such as @next/env or @img/sharp-*.
+function lockedVersions(lockfile: string, name: string): string[] {
+  const pattern = new RegExp(`^ {2}${name}@(\\d+\\.\\d+\\.\\d+)[:(]`, "gm");
+  return [...new Set([...lockfile.matchAll(pattern)].map((match) => match[1] ?? ""))];
+}
+
+// First versions fixing the Image Optimization RCE (SVG via sharp) and the
+// Server Actions DoS advisories (openspec change patch-next-security).
+const SECURITY_FLOORS: Record<string, Semver> = {
+  next: [15, 5, 28],
+  sharp: [0, 35, 5],
+};
+
+describe("Next.js pin", () => {
+  it("declares an exact next version", () => {
+    expect(parseExactVersion(readManifest().dependencies?.next)).not.toBeNull();
+  });
+
+  it("keeps eslint-config-next on the same version as next", () => {
+    const manifest = readManifest();
+
+    expect(manifest.devDependencies?.["eslint-config-next"]).toBe(manifest.dependencies?.next);
+  });
+
+  it("resolves next in the lockfile to the declared version", () => {
+    const versions = lockedVersions(readWebFile("pnpm-lock.yaml"), "next");
+
+    expect(versions).toEqual([readManifest().dependencies?.next]);
+  });
+
+  it.each(["^15.5.28", "~15.5.28", "15.x", "15.5", "latest", "", undefined])(
+    "rejects %j as a next pin",
+    (value) => {
+      expect(parseExactVersion(value)).toBeNull();
+    },
+  );
+});
+
+describe("Security floors", () => {
+  it.each(Object.entries(SECURITY_FLOORS))(
+    "resolves every %s at or above its floor",
+    (name, floor) => {
+      const versions = lockedVersions(readWebFile("pnpm-lock.yaml"), name);
+
+      // An empty match means the lockfile format changed; fail instead of passing vacuously.
+      expect(versions.length).toBeGreaterThan(0);
+      for (const version of versions) {
+        const parsed = parseExactVersion(version);
+        expect(parsed, version).not.toBeNull();
+        expect(isAtLeast(parsed ?? [0, 0, 0], floor), `${name}@${version}`).toBe(true);
+      }
+    },
+  );
+
+  it.each([
+    ["15.5.27", [15, 5, 28]],
+    ["15.4.99", [15, 5, 28]],
+    ["0.35.4", [0, 35, 5]],
+    ["0.34.9", [0, 35, 5]],
+  ] as const)("reports %s as below the floor", (version, floor) => {
+    expect(isAtLeast(parseExactVersion(version) ?? [0, 0, 0], [...floor])).toBe(false);
+  });
+
+  it.each([
+    ["15.5.28", [15, 5, 28]],
+    ["16.0.0", [15, 5, 28]],
+    ["0.35.5", [0, 35, 5]],
+  ] as const)("accepts %s at or above the floor", (version, floor) => {
+    expect(isAtLeast(parseExactVersion(version) ?? [0, 0, 0], [...floor])).toBe(true);
+  });
+
+  it("finds top-level versions but not scoped packages", () => {
+    const lockfile = [
+      "  next@15.5.27:",
+      "  next@15.5.27(react@19.3.1):",
+      "  '@next/env@15.5.1':",
+      "  '@img/sharp-linux-x64@0.30.0':",
+      "  sharp@0.35.4(@types/node@20.19.43):",
+    ].join("\n");
+
+    expect(lockedVersions(lockfile, "next")).toEqual(["15.5.27"]);
+    expect(lockedVersions(lockfile, "sharp")).toEqual(["0.35.4"]);
+  });
 });
 
 describe("Prettier ignore for tool-owned files", () => {
